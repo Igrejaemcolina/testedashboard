@@ -8836,9 +8836,17 @@ function renderServiceSummaryCards(summary) {
 
   elements.serviceSummary.hidden = false;
   if (elements.serviceSummaryTitle) {
-    elements.serviceSummaryTitle.textContent = translate(
-      "services.summaryTitle"
-    );
+    let summaryTitle = translate("services.summaryTitle");
+    if (isCategoryPage && state?.activeCategory) {
+      const activeCategory = CATEGORY_BY_ID[state.activeCategory];
+      if (activeCategory && !activeCategory.isServiceCategory) {
+        const categoryTitle = translateCategoryField(activeCategory, "title");
+        if (categoryTitle) {
+          summaryTitle = categoryTitle;
+        }
+      }
+    }
+    elements.serviceSummaryTitle.textContent = summaryTitle;
   }
   if (elements.serviceSummaryDescription) {
     elements.serviceSummaryDescription.textContent = translate(
