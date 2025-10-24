@@ -40,6 +40,82 @@ const PARENT_SHEET_HEADERS = {
   childPhone: "Telefone do Adolescente",
 };
 
+const PARENT_SHEET_ALIASES = {
+  childName: [
+    PARENT_SHEET_HEADERS.childName,
+    "Nome do Adolescente?",
+    "Nome do Adolescente",
+    "Nome do adolescente(a)",
+    "Nome do Adolescente(a):",
+    "Nome do adolescente",
+  ],
+  childBirthday: [
+    PARENT_SHEET_HEADERS.childBirthday,
+    "Data de aniversário do Adolescente",
+    "Data de aniversário do adolescente",
+    "Data de aniversário do adolescente:",
+    "Data de nascimento do Adolescente",
+  ],
+  childPhone: [
+    PARENT_SHEET_HEADERS.childPhone,
+    "Telefone do Adolescente",
+    "Telefone do adolescente",
+    "Telefone do adolescente:",
+    "Telefone do Filho(a)",
+  ],
+  fatherName: [
+    PARENT_SHEET_HEADERS.fatherName,
+    "Nome do Pai?",
+    "Nome do Pai:",
+    "Nome do pai",
+  ],
+  fatherBirthday: [
+    PARENT_SHEET_HEADERS.fatherBirthday,
+    "Data de aniversário do Pai",
+    "Data de aniversário do pai",
+    "Aniversário do Pai",
+  ],
+  fatherPhone: [
+    PARENT_SHEET_HEADERS.fatherPhone,
+    "Telefone do Pai",
+    "Telefone do pai",
+    "Telefone do Pai:",
+  ],
+  motherName: [
+    PARENT_SHEET_HEADERS.motherName,
+    "Nome da Mãe?",
+    "Nome da Mãe:",
+    "Nome da mae",
+  ],
+  motherBirthday: [
+    PARENT_SHEET_HEADERS.motherBirthday,
+    "Data de aniversário da Mãe",
+    "Data de aniversário da mãe",
+    "Aniversário da Mãe",
+  ],
+  motherPhone: [
+    PARENT_SHEET_HEADERS.motherPhone,
+    "Telefone da Mãe",
+    "Telefone da mãe",
+    "Telefone da Mãe:",
+  ],
+  siblingStatus: [
+    PARENT_SHEET_HEADERS.siblingStatus,
+    "Possui Irmão(s)",
+    "Possui irmão(s)?",
+  ],
+  siblingParticipation: [
+    PARENT_SHEET_HEADERS.siblingParticipation,
+    "Irmão participa na Casa",
+    "Irmão participa na casa?",
+  ],
+  siblingsList: [
+    PARENT_SHEET_HEADERS.siblingsList,
+    "Irmãos (nome - data)",
+    "Irmãos",
+  ],
+};
+
 let SHEET_ID = "";
 let SUPPLEMENTAL_SHEET_ID = "";
 let SERVICE_GVIZ_URL = "";
@@ -2582,6 +2658,7 @@ const elements = {
   categoryMeta: document.getElementById("category-meta"),
   categoryCards: document.getElementById("category-cards"),
   categoryEmpty: document.getElementById("category-empty"),
+  categoryChartContainer: document.getElementById("category-chart-container"),
   categoryChartEmpty: document.getElementById("category-chart-empty"),
   overallEmpty: document.getElementById("overall-empty"),
   overallChart: document.getElementById("overall-age-chart"),
@@ -7807,6 +7884,70 @@ function buildEnrichedRecords(records) {
   });
 }
 
+function buildParentRecordLookup(record) {
+  const map = new Map();
+  if (!record || typeof record !== "object") {
+    return map;
+  }
+
+  const pushEntry = (key, value) => {
+    if (value == null) {
+      return;
+    }
+    const normalizedKey = normalizeColumnLabel(key);
+    if (!normalizedKey) {
+      return;
+    }
+    const stringValue =
+      typeof value === "string" ? value.trim() : String(value).trim();
+    if (!stringValue) {
+      return;
+    }
+    if (!map.has(normalizedKey)) {
+      map.set(normalizedKey, { key, value: stringValue });
+    }
+  };
+
+  Object.entries(record).forEach(([key, value]) => {
+    if (key === "__raw") {
+      return;
+    }
+    pushEntry(key, value);
+  });
+
+  const raw = record.__raw;
+  if (raw && typeof raw === "object") {
+    Object.entries(raw).forEach(([key, value]) => {
+      pushEntry(key, value);
+    });
+  }
+
+  return map;
+}
+
+function getParentFieldFromLookup(lookup, fieldKey) {
+  if (!(lookup instanceof Map)) {
+    return { value: "", key: "" };
+  }
+
+  const aliases = PARENT_SHEET_ALIASES[fieldKey];
+  if (!Array.isArray(aliases)) {
+    return { value: "", key: "" };
+  }
+
+  for (const alias of aliases) {
+    const normalized = normalizeColumnLabel(alias);
+    if (!normalized) {
+      continue;
+    }
+    if (lookup.has(normalized)) {
+      return lookup.get(normalized);
+    }
+  }
+
+  return { value: "", key: aliases[0] ?? "" };
+}
+
 function filterParentDetails(detailList, role) {
   if (!Array.isArray(detailList)) {
     return [];
@@ -7900,107 +8041,122 @@ function buildParentEntries(parentRecords) {
         return null;
       }
 
-      const childName = String(
-        record[PARENT_SHEET_HEADERS.childName] ?? ""
-      ).trim();
-      const rawBirthday =
-        record.__raw?.[PARENT_SHEET_HEADERS.childBirthday] ??
-        record[PARENT_SHEET_HEADERS.childBirthday] ??
-        "";
-      const childBirthday = String(rawBirthday ?? "").trim();
-      const birthDate = parseDate(rawBirthday);
+      const lookup = buildParentRecordLookup(record);
+      const detailList = Array.from(lookup.values());
+
+      const childNameEntry = getParentFieldFromLookup(lookup, "childName");
+      const childName = String(childNameEntry.value ?? "").trim();
+
+      const childBirthdayEntry = getParentFieldFromLookup(
+        lookup,
+        "childBirthday"
+      );
+      const childBirthday = String(childBirthdayEntry.value ?? "").trim();
+      const birthDate = parseDate(childBirthdayEntry.value ?? "");
       const childAge =
         birthDate instanceof Date && !Number.isNaN(birthDate.getTime())
           ? calculateAge(birthDate)
           : null;
-      const childPhone = String(
-        record[PARENT_SHEET_HEADERS.childPhone] ?? ""
-      ).trim();
+
+      const childPhoneEntry = getParentFieldFromLookup(lookup, "childPhone");
+      const childPhone = String(childPhoneEntry.value ?? "").trim();
+
+      const appendUniqueDetail = (list, entry) => {
+        if (!entry || !entry.key) {
+          return;
+        }
+
+        const normalizedKey = normalizeColumnLabel(entry.key);
+        if (!normalizedKey) {
+          return;
+        }
+
+        if (
+          list.some(
+            (item) => normalizeColumnLabel(item.key) === normalizedKey
+          )
+        ) {
+          return;
+        }
+
+        const stringValue =
+          entry.value == null ? "" : String(entry.value).trim();
+        list.push({ key: entry.key, value: stringValue });
+      };
 
       const fatherDetails = [];
-      const fatherNameValue = String(
-        record[PARENT_SHEET_HEADERS.fatherName] ?? ""
-      ).trim();
-      if (fatherNameValue) {
-        fatherDetails.push({
-          key: PARENT_SHEET_HEADERS.fatherName,
-          value: fatherNameValue,
-        });
-      }
-      const fatherBirthdayValue = String(
-        record[PARENT_SHEET_HEADERS.fatherBirthday] ?? ""
-      ).trim();
-      if (fatherBirthdayValue) {
-        fatherDetails.push({
-          key: PARENT_SHEET_HEADERS.fatherBirthday,
-          value: fatherBirthdayValue,
-        });
-      }
-      const fatherPhoneValue = String(
-        record[PARENT_SHEET_HEADERS.fatherPhone] ?? ""
-      ).trim();
-      if (fatherPhoneValue) {
-        fatherDetails.push({
-          key: PARENT_SHEET_HEADERS.fatherPhone,
-          value: fatherPhoneValue,
-        });
-      }
+      const fatherNameEntry = getParentFieldFromLookup(lookup, "fatherName");
+      appendUniqueDetail(fatherDetails, fatherNameEntry);
+      const fatherBirthdayEntry = getParentFieldFromLookup(
+        lookup,
+        "fatherBirthday"
+      );
+      appendUniqueDetail(fatherDetails, fatherBirthdayEntry);
+      const fatherPhoneEntry = getParentFieldFromLookup(lookup, "fatherPhone");
+      appendUniqueDetail(fatherDetails, fatherPhoneEntry);
+
+      filterParentDetails(detailList, "father").forEach((detail) => {
+        appendUniqueDetail(fatherDetails, detail);
+      });
       const father = createParentProfile(fatherDetails, "father");
 
       const motherDetails = [];
-      const motherNameValue = String(
-        record[PARENT_SHEET_HEADERS.motherName] ?? ""
-      ).trim();
-      if (motherNameValue) {
-        motherDetails.push({
-          key: PARENT_SHEET_HEADERS.motherName,
-          value: motherNameValue,
-        });
-      }
-      const motherBirthdayValue = String(
-        record[PARENT_SHEET_HEADERS.motherBirthday] ?? ""
-      ).trim();
-      if (motherBirthdayValue) {
-        motherDetails.push({
-          key: PARENT_SHEET_HEADERS.motherBirthday,
-          value: motherBirthdayValue,
-        });
-      }
-      const motherPhoneValue = String(
-        record[PARENT_SHEET_HEADERS.motherPhone] ?? ""
-      ).trim();
-      if (motherPhoneValue) {
-        motherDetails.push({
-          key: PARENT_SHEET_HEADERS.motherPhone,
-          value: motherPhoneValue,
-        });
-      }
+      const motherNameEntry = getParentFieldFromLookup(lookup, "motherName");
+      appendUniqueDetail(motherDetails, motherNameEntry);
+      const motherBirthdayEntry = getParentFieldFromLookup(
+        lookup,
+        "motherBirthday"
+      );
+      appendUniqueDetail(motherDetails, motherBirthdayEntry);
+      const motherPhoneEntry = getParentFieldFromLookup(lookup, "motherPhone");
+      appendUniqueDetail(motherDetails, motherPhoneEntry);
+
+      filterParentDetails(detailList, "mother").forEach((detail) => {
+        appendUniqueDetail(motherDetails, detail);
+      });
       const mother = createParentProfile(motherDetails, "mother");
 
       if (!father && !mother) {
         return null;
       }
 
-      const siblingStatus = String(
-        record[PARENT_SHEET_HEADERS.siblingStatus] ?? ""
-      ).trim();
-      const siblingParticipation = String(
-        record[PARENT_SHEET_HEADERS.siblingParticipation] ?? ""
-      ).trim();
-      const siblingsList = String(
-        record[PARENT_SHEET_HEADERS.siblingsList] ?? ""
-      ).trim();
+      const siblingStatusEntry = getParentFieldFromLookup(
+        lookup,
+        "siblingStatus"
+      );
+      const siblingParticipationEntry = getParentFieldFromLookup(
+        lookup,
+        "siblingParticipation"
+      );
+      const siblingsListEntry = getParentFieldFromLookup(
+        lookup,
+        "siblingsList"
+      );
 
       return {
         childName,
         childAge,
         childPhone,
         childBirthday,
-        siblingStatus,
-        siblingParticipation,
-        siblingsList,
+        siblingStatus: String(siblingStatusEntry.value ?? "").trim(),
+        siblingParticipation: String(
+          siblingParticipationEntry.value ?? ""
+        ).trim(),
+        siblingsList: String(siblingsListEntry.value ?? "").trim(),
         father,
         mother,
+        recordDetails: detailList.map(({ key, value }) => ({
+          key,
+          value,
+        })),
+        fieldEntries: {
+          childName: childNameEntry,
+          childBirthday: childBirthdayEntry,
+          childPhone: childPhoneEntry,
+          siblingStatus: siblingStatusEntry,
+          siblingParticipation: siblingParticipationEntry,
+          siblingsList: siblingsListEntry,
+        },
       };
     })
     .filter(Boolean);
@@ -9133,26 +9289,12 @@ function getAccessibleParentEntries() {
   return [];
 }
 
-async function handleParentCardSelection(entry) {
+function handleParentCardSelection(entry) {
   if (!entry) {
     return;
   }
 
-  const availableRoles = [];
-  if (entry.father) availableRoles.push("father");
-  if (entry.mother) availableRoles.push("mother");
-
-  if (!availableRoles.length) {
-    setStatus(translate("parents.noDetails"));
-    return;
-  }
-
-  const selectedRole = await openParentChoice(entry, availableRoles);
-  if (!selectedRole) {
-    return;
-  }
-
-  openParentDetail(entry, selectedRole);
+  openParentFamilyDetail(entry);
 }
 
 function renderParentCards(entries, category) {
@@ -9183,23 +9325,25 @@ function renderParentCards(entries, category) {
     card.className = "parent-card";
     card.tabIndex = 0;
 
-    const fatherName = item.father?.name?.trim() || translate("parents.labels.unknown");
-    const motherName = item.mother?.name?.trim() || translate("parents.labels.unknown");
+    const fatherName =
+      item.father?.name?.trim() || translate("parents.labels.unknown");
+    const motherName =
+      item.mother?.name?.trim() || translate("parents.labels.unknown");
     const childName = item.childName?.trim() || translate("modal.noName");
 
-    const fatherLine = document.createElement("strong");
-    fatherLine.className = "parent-line parent-line-father";
-    fatherLine.textContent = translate("parents.card.father", { name: fatherName });
-
-    const motherLine = document.createElement("strong");
-    motherLine.className = "parent-line parent-line-mother";
-    motherLine.textContent = translate("parents.card.mother", { name: motherName });
-
-    const childLine = document.createElement("span");
+    const childLine = document.createElement("strong");
     childLine.className = "parent-line parent-line-child";
     childLine.textContent = translate("parents.card.child", { name: childName });
 
-    card.append(fatherLine, motherLine, childLine);
+    const motherLine = document.createElement("span");
+    motherLine.className = "parent-line parent-line-mother";
+    motherLine.textContent = translate("parents.card.mother", { name: motherName });
+
+    const fatherLine = document.createElement("span");
+    fatherLine.className = "parent-line parent-line-father";
+    fatherLine.textContent = translate("parents.card.father", { name: fatherName });
+
+    card.append(childLine, motherLine, fatherLine);
 
     card.addEventListener("click", () => {
       handleParentCardSelection(item);
@@ -9485,6 +9629,10 @@ function renderCareNetworkCategory(category) {
 
   hideServiceSummary();
 
+  if (elements.categoryChartContainer) {
+    elements.categoryChartContainer.style.display = "none";
+  }
+
   if (state.charts.category) {
     state.charts.category.destroy();
     state.charts.category = null;
@@ -9560,6 +9708,10 @@ function renderParentsCategory(category) {
   }
 
   hideServiceSummary();
+
+  if (elements.categoryChartContainer) {
+    elements.categoryChartContainer.style.display = "none";
+  }
 
   const entries = getAccessibleParentEntries();
   state.parentSummary = summarizeParentEntries(entries);
@@ -10496,6 +10648,10 @@ function renderCategory(categoryId = "total") {
   setActiveSummaryCard(category.id);
   applyServiceSummaryText(category);
 
+  if (elements.categoryChartContainer) {
+    elements.categoryChartContainer.style.display = "";
+  }
+
   if (category.isParentCategory) {
     renderParentsCategory(category);
     return;
@@ -11057,7 +11213,7 @@ function openRecord(record) {
   renderServiceControls(entry);
 }
 
-function openParentDetail(entry, role) {
+function openParentFamilyDetail(entry) {
   if (!entry) {
     return;
   }
@@ -11065,70 +11221,119 @@ function openParentDetail(entry, role) {
   state.activeDetailEntry = null;
   hideServiceControls();
 
-  const parent = role === "father" ? entry.father : entry.mother;
-  if (!parent) {
+  const usedKeys = new Set();
+  const details = [];
+  const { fieldEntries = {}, recordDetails } = entry;
+
+  const pushDetail = (key, value, { track = true } = {}) => {
+    if (!key) {
+      return;
+    }
+
+    details.push({ key, value });
+
+    if (track) {
+      const normalized = normalizeColumnLabel(key);
+      if (normalized) {
+        usedKeys.add(normalized);
+      }
+    }
+  };
+
+  const pushFieldEntry = (fieldEntry, value, options) => {
+    if (!fieldEntry || !fieldEntry.key) {
+      return;
+    }
+
+    pushDetail(fieldEntry.key, value ?? fieldEntry.value ?? "", options);
+  };
+
+  const childName = entry.childName?.trim() || translate("modal.noName");
+  if (fieldEntries.childName?.key) {
+    pushFieldEntry(fieldEntries.childName, childName);
+  } else {
+    pushDetail(translate("parents.details.childLabel"), childName, {
+      track: false,
+    });
+  }
+
+  if (Number.isFinite(entry.childAge)) {
+    pushDetail(translate("parents.details.ageLabel"), formatAge(entry.childAge), {
+      track: false,
+    });
+  }
+
+  if (fieldEntries.childBirthday?.key) {
+    pushFieldEntry(fieldEntries.childBirthday);
+  }
+
+  if (fieldEntries.childPhone?.key) {
+    const formattedPhone = entry.childPhone
+      ? formatPhone(entry.childPhone)
+      : fieldEntries.childPhone.value;
+    pushFieldEntry(fieldEntries.childPhone, formattedPhone);
+  }
+
+  if (fieldEntries.siblingStatus?.key) {
+    pushFieldEntry(fieldEntries.siblingStatus);
+  }
+
+  if (fieldEntries.siblingParticipation?.key) {
+    pushFieldEntry(fieldEntries.siblingParticipation);
+  }
+
+  if (fieldEntries.siblingsList?.key) {
+    pushFieldEntry(fieldEntries.siblingsList);
+  }
+
+  const appendParentDetails = (parent) => {
+    if (!parent || !Array.isArray(parent.details)) {
+      return;
+    }
+
+    parent.details.forEach(({ key, value }) => {
+      if (!key) {
+        return;
+      }
+
+      const normalized = normalizeColumnLabel(key);
+      if (normalized && usedKeys.has(normalized)) {
+        return;
+      }
+
+      let displayValue = value;
+      if (normalized && (normalized.includes("telefone") || normalized.includes("phone"))) {
+        displayValue = formatPhone(value);
+      }
+
+      pushDetail(key, displayValue);
+    });
+  };
+
+  appendParentDetails(entry.mother);
+  appendParentDetails(entry.father);
+
+  if (Array.isArray(recordDetails)) {
+    recordDetails.forEach(({ key, value }) => {
+      if (!key) {
+        return;
+      }
+
+      const normalized = normalizeColumnLabel(key);
+      if (normalized && usedKeys.has(normalized)) {
+        return;
+      }
+
+      pushDetail(key, value);
+    });
+  }
+
+  if (!details.length) {
     setStatus(translate("parents.noDetails"));
     return;
   }
 
-  const childName = entry.childName?.trim() || translate("modal.noName");
-  const details = [
-    {
-      key: translate("parents.details.childLabel"),
-      value: childName,
-    },
-    {
-      key: translate("parents.details.ageLabel"),
-      value: Number.isFinite(entry.childAge)
-        ? formatAge(entry.childAge)
-        : translate("format.ageMissing"),
-    },
-    {
-      key: translate("parents.details.phoneLabel"),
-      value: entry.childPhone
-        ? formatPhone(entry.childPhone)
-        : translate("format.phoneMissing"),
-    },
-  ];
-
-  if (entry.childBirthday) {
-    details.push({
-      key: PARENT_SHEET_HEADERS.childBirthday,
-      value: entry.childBirthday,
-    });
-  }
-  if (entry.siblingStatus) {
-    details.push({
-      key: PARENT_SHEET_HEADERS.siblingStatus,
-      value: entry.siblingStatus,
-    });
-  }
-  if (entry.siblingParticipation) {
-    details.push({
-      key: PARENT_SHEET_HEADERS.siblingParticipation,
-      value: entry.siblingParticipation,
-    });
-  }
-  if (entry.siblingsList) {
-    details.push({
-      key: PARENT_SHEET_HEADERS.siblingsList,
-      value: entry.siblingsList,
-    });
-  }
-
-  if (Array.isArray(parent.details) && parent.details.length) {
-    parent.details.forEach(({ key, value }) => {
-      details.push({ key, value });
-    });
-  } else {
-    setStatus(translate("parents.noDetails"));
-  }
-
-  const fallbackTitle = translate(`parents.modalFallback.${role}`, {
-    child: childName,
-  });
-  const title = parent.name?.trim() || fallbackTitle;
-
+  const title = childName || translate("modal.title");
   openDetailModal(title, details);
 }
 

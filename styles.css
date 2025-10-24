@@ -1050,8 +1050,9 @@ body[data-access-role="capitao"] .card.restricted .card-hint {
 }
 
 .parent-line-child {
-  color: var(--text-secondary);
-  font-size: 0.9rem;
+  color: var(--text-primary);
+  font-size: 1rem;
+  font-weight: 600;
 }
 
 .care-card {
