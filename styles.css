@@ -30,7 +30,13 @@ body.access-locked {
 }
 
 body.card-detail-open {
-  overflow: hidden;
+  overflow: auto;
+}
+
+body.card-detail-open .cards,
+body.card-detail-open .overview,
+body.card-detail-open .birthdays {
+  display: none !important;
 }
 
 main {
@@ -2291,85 +2297,78 @@ body[data-access-role="capitao"] .card.restricted .card-hint {
   outline: none;
 }
 
-.card-detail-overlay {
-  position: fixed;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(2, 6, 23, 0.7);
-  backdrop-filter: blur(6px);
-  padding: clamp(1rem, 4vw, 2.5rem);
-  z-index: 45;
-}
-
-.card-detail-overlay[hidden] {
-  display: none;
-}
-
-.card-detail-panel {
-  width: min(720px, 100%);
-  max-height: min(85vh, 960px);
-  background: var(--bg-card);
-  border-radius: 20px;
+.card-detail {
+  background: rgba(15, 23, 42, 0.75);
+  border-radius: 26px;
   border: 1px solid rgba(56, 189, 248, 0.2);
-  box-shadow: 0 24px 48px rgba(2, 6, 23, 0.45);
+  box-shadow: 0 28px 48px rgba(2, 6, 23, 0.45);
+  padding: clamp(1.5rem, 4vw, 2.75rem);
+  margin-top: clamp(1.75rem, 5vw, 3rem);
+  max-width: 1080px;
+  width: min(100%, 1080px);
+  margin-left: auto;
+  margin-right: auto;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
-  outline: none;
+  gap: clamp(1.25rem, 4vw, 2rem);
+}
+
+.card-detail[hidden] {
+  display: none !important;
 }
 
 .card-detail-header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 1.25rem clamp(1rem, 3vw, 2rem) 1rem;
   gap: 1rem;
-  border-bottom: 1px solid rgba(56, 189, 248, 0.18);
+  flex-wrap: wrap;
 }
 
 .card-detail-title {
   margin: 0;
-  font-size: clamp(1.25rem, 2.4vw, 1.65rem);
+  font-size: clamp(1.35rem, 3.2vw, 1.9rem);
   font-weight: 700;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.01em;
 }
 
-.card-detail-close {
+.card-detail-back {
   appearance: none;
-  border: none;
+  border: 1px solid rgba(56, 189, 248, 0.35);
   background: rgba(15, 23, 42, 0.65);
-  border-radius: 999px;
-  width: 2.25rem;
-  height: 2.25rem;
   color: var(--text-primary);
-  font-size: 1.35rem;
-  font-weight: 700;
-  line-height: 1;
+  border-radius: 999px;
+  padding: 0.6rem 1.25rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  transition: background 0.2s ease, transform 0.2s ease,
-    border-color 0.2s ease;
-  border: 1px solid transparent;
+  gap: 0.5rem;
+  transition: background 0.2s ease, border-color 0.2s ease,
+    transform 0.2s ease;
 }
 
-.card-detail-close:hover,
-.card-detail-close:focus-visible {
+.card-detail-back::before {
+  content: "";
+  width: 0.75rem;
+  height: 0.75rem;
+  border-left: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(45deg);
+}
+
+.card-detail-back:hover,
+.card-detail-back:focus-visible {
   outline: none;
-  background: rgba(56, 189, 248, 0.22);
-  border-color: rgba(56, 189, 248, 0.45);
+  background: rgba(56, 189, 248, 0.25);
+  border-color: rgba(56, 189, 248, 0.55);
   transform: translateY(-1px);
 }
 
 .card-detail-body {
-  padding: clamp(1rem, 3vw, 2rem);
-  overflow-y: auto;
   display: block;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(56, 189, 248, 0.4) transparent;
+  padding: 0;
 }
 
 .card-detail-category .section-header {
@@ -2377,7 +2376,7 @@ body[data-access-role="capitao"] .card.restricted .card-hint {
 }
 
 .card-detail-category .service-summary {
-  margin-top: 1.25rem;
+  margin-top: 1.5rem;
 }
 
 .category-template {
@@ -2390,19 +2389,6 @@ body[data-access-role="capitao"] .card.restricted .card-hint {
   display: none;
 }
 
-.card-detail-body::-webkit-scrollbar {
-  width: 0.55rem;
-}
-
-.card-detail-body::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.card-detail-body::-webkit-scrollbar-thumb {
-  background: rgba(56, 189, 248, 0.35);
-  border-radius: 999px;
-}
-
 .card-detail-loading,
 .card-detail-error {
   margin: 0;
@@ -2413,6 +2399,28 @@ body[data-access-role="capitao"] .card.restricted .card-hint {
 
 .card-detail-error {
   color: var(--danger);
+}
+
+@media (max-width: 768px) {
+  body.card-detail-open {
+    overflow: auto;
+  }
+
+  .card-detail {
+    border-radius: 22px;
+    padding: 1.5rem;
+    margin-top: 1.5rem;
+    gap: 1.25rem;
+  }
+
+  .card-detail-back {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .card-detail-title {
+    font-size: clamp(1.25rem, 6vw, 1.7rem);
+  }
 }
 
 .card-template {

@@ -2473,11 +2473,10 @@ const elements = {
   summaryCards: Array.from(
     document.querySelectorAll(".cards .card[data-category]")
   ),
-  cardDetailOverlay: document.getElementById("card-detail-overlay"),
-  cardDetailPanel: document.getElementById("card-detail-panel"),
+  cardDetail: document.getElementById("card-detail"),
   cardDetailContent: document.getElementById("card-detail-content"),
   cardDetailTitle: document.getElementById("card-detail-title"),
-  cardDetailClose: document.getElementById("card-detail-close"),
+  cardDetailBack: document.getElementById("card-detail-back"),
   overviewTitle: document.getElementById("overview-title"),
   overviewDescription: document.getElementById("overview-description"),
   categoryTitle: document.getElementById("category-title"),
@@ -11109,12 +11108,12 @@ function resetCardDetailContent() {
 }
 
 function closeCardDetail() {
-  if (!elements.cardDetailOverlay || elements.cardDetailOverlay.hidden) {
+  if (!elements.cardDetail || elements.cardDetail.hidden) {
     return;
   }
 
-  elements.cardDetailOverlay.hidden = true;
-  elements.cardDetailOverlay.setAttribute("aria-hidden", "true");
+  elements.cardDetail.hidden = true;
+  elements.cardDetail.setAttribute("aria-hidden", "true");
   document.body.classList.remove("card-detail-open");
   resetCardDetailContent();
 
@@ -11196,33 +11195,33 @@ function updateCategoryTemplate(categoryId) {
 }
 
 function openCardDetail(card, categoryId) {
-  if (!elements.cardDetailOverlay || !elements.cardDetailContent) {
+  if (!elements.cardDetail || !elements.cardDetailContent) {
     return;
   }
 
-  state.activeCardDetailTrigger = card;
+  state.activeCardDetailTrigger = card || null;
 
-  const titleElement = card.querySelector("h2");
+  const titleElement = card?.querySelector("h2");
   const title = titleElement?.textContent?.trim();
   if (elements.cardDetailTitle) {
     elements.cardDetailTitle.textContent = title || "Detalhes";
   }
 
-  elements.cardDetailOverlay.hidden = false;
-  elements.cardDetailOverlay.setAttribute("aria-hidden", "false");
+  elements.cardDetail.hidden = false;
+  elements.cardDetail.setAttribute("aria-hidden", "false");
   document.body.classList.add("card-detail-open");
 
-  if (elements.cardDetailPanel) {
-    try {
-      elements.cardDetailPanel.focus({ preventScroll: true });
-    } catch (error) {
-      elements.cardDetailPanel.focus();
-    }
+  updateCategoryTemplate(categoryId);
+
+  elements.cardDetail.scrollIntoView({ behavior: "smooth", block: "start" });
+
+  try {
+    elements.cardDetail.focus({ preventScroll: true });
+  } catch (error) {
+    elements.cardDetail.focus();
   }
 
-  if (elements.cardDetailContent) {
-    elements.cardDetailContent.scrollTop = 0;
-  }
+  elements.cardDetailContent.scrollTop = 0;
 
   if (categoryId) {
     renderCategory(categoryId);
@@ -11241,7 +11240,7 @@ function handleCardTemplate(card) {
     return true;
   }
 
-  if (!elements.cardDetailOverlay || !elements.cardDetailContent) {
+  if (!elements.cardDetail || !elements.cardDetailContent) {
     return false;
   }
 
@@ -11270,17 +11269,9 @@ function setupEventListeners() {
     elements.serviceSummaryGrid.addEventListener("click", handleServiceSummaryClick);
   }
 
-  if (elements.cardDetailClose) {
-    elements.cardDetailClose.addEventListener("click", () => {
+  if (elements.cardDetailBack) {
+    elements.cardDetailBack.addEventListener("click", () => {
       closeCardDetail();
-    });
-  }
-
-  if (elements.cardDetailOverlay) {
-    elements.cardDetailOverlay.addEventListener("click", (event) => {
-      if (event.target === elements.cardDetailOverlay) {
-        closeCardDetail();
-      }
     });
   }
 

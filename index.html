@@ -273,84 +273,80 @@
       <section id="status" class="status"></section>
     </main>
 
-    <div
-      class="card-detail-overlay"
-      id="card-detail-overlay"
-      role="dialog"
-      aria-modal="true"
+    <section
+      class="card-detail"
+      id="card-detail"
+      tabindex="-1"
+      role="region"
+      aria-labelledby="card-detail-title"
       aria-hidden="true"
       hidden
     >
-      <section class="card-detail-panel" id="card-detail-panel" tabindex="-1">
-        <header class="card-detail-header">
-          <h2 class="card-detail-title" id="card-detail-title">Detalhes</h2>
-          <button
-            type="button"
-            class="card-detail-close"
-            id="card-detail-close"
-            aria-label="Fechar"
-          >
-            ×
-          </button>
-        </header>
-        <div class="card-detail-body" id="card-detail-content">
+      <header class="card-detail-header">
+        <button
+          type="button"
+          class="card-detail-back"
+          id="card-detail-back"
+          aria-label="Voltar para o painel inicial"
+        >
+          Voltar
+        </button>
+        <h2 class="card-detail-title" id="card-detail-title">Detalhes</h2>
+      </header>
+      <div class="card-detail-body" id="card-detail-content">
+        <section class="category-panel card-detail-category" aria-live="polite">
+          <header class="section-header">
+            <h2 id="category-title">Carregando categoria...</h2>
+            <p id="category-description">Estamos preparando os dados.</p>
+            <div class="category-template" id="category-template" hidden></div>
+            <p id="category-meta" class="category-meta">
+              0 irmãos nesta categoria
+            </p>
+          </header>
+          <div class="category-controls" id="teens-filter" hidden>
+            <label class="category-filter" for="teens-filter-toggle">
+              <input
+                type="checkbox"
+                id="teens-filter-toggle"
+                name="teens-filter-toggle"
+              />
+              <span>
+                Idade apta para colportagem
+                <small>(mostra apenas 16 e 17 anos)</small>
+              </span>
+            </label>
+          </div>
+          <div class="chart-container">
+            <canvas
+              id="category-age-chart"
+              aria-label="Gráfico de idades por categoria"
+              role="img"
+            ></canvas>
+            <p class="empty-message" id="category-chart-empty">
+              Não há idades disponíveis para esta categoria.
+            </p>
+          </div>
           <section
-            class="category-panel card-detail-category"
+            class="service-summary"
+            id="service-summary"
+            hidden
             aria-live="polite"
           >
-            <header class="section-header">
-              <h2 id="category-title">Carregando categoria...</h2>
-              <p id="category-description">Estamos preparando os dados.</p>
-              <div class="category-template" id="category-template" hidden></div>
-              <p id="category-meta" class="category-meta">
-                0 irmãos nesta categoria
+            <header class="service-summary-header">
+              <h3 id="service-summary-title">Serviços disponíveis</h3>
+              <p id="service-summary-description">
+                Clique em um serviço para filtrar os irmãos que servem.
               </p>
             </header>
-            <div class="category-controls" id="teens-filter" hidden>
-              <label class="category-filter" for="teens-filter-toggle">
-                <input
-                  type="checkbox"
-                  id="teens-filter-toggle"
-                  name="teens-filter-toggle"
-                />
-                <span>
-                  Idade apta para colportagem
-                  <small>(mostra apenas 16 e 17 anos)</small>
-                </span>
-              </label>
-            </div>
-            <div class="chart-container">
-              <canvas
-                id="category-age-chart"
-                aria-label="Gráfico de idades por categoria"
-                role="img"
-              ></canvas>
-              <p class="empty-message" id="category-chart-empty">
-                Não há idades disponíveis para esta categoria.
-              </p>
-            </div>
-            <section
-              class="service-summary"
-              id="service-summary"
-              hidden
-              aria-live="polite"
-            >
-              <header class="service-summary-header">
-                <h3 id="service-summary-title">Serviços disponíveis</h3>
-                <p id="service-summary-description">
-                  Clique em um serviço para filtrar os irmãos que servem.
-                </p>
-              </header>
-              <div class="service-summary-grid" id="service-summary-grid"></div>
-            </section>
-            <div id="category-cards" class="people-grid" aria-live="polite"></div>
-            <p class="empty-message" id="category-empty">
-              Nenhum irmão encontrado nesta categoria.
-            </p>
+            <div class="service-summary-grid" id="service-summary-grid"></div>
           </section>
-        </div>
-      </section>
-    </div>
+          <div id="category-cards" class="people-grid" aria-live="polite"></div>
+          <p class="empty-message" id="category-empty">
+            Nenhum irmão encontrado nesta categoria.
+          </p>
+        </section>
+      </div>
+    </section>
 
     <div
       class="parent-choice"
