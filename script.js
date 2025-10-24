@@ -2473,6 +2473,11 @@ const elements = {
   summaryCards: Array.from(
     document.querySelectorAll(".cards .card[data-category]")
   ),
+  cardDetailOverlay: document.getElementById("card-detail-overlay"),
+  cardDetailPanel: document.getElementById("card-detail-panel"),
+  cardDetailContent: document.getElementById("card-detail-content"),
+  cardDetailTitle: document.getElementById("card-detail-title"),
+  cardDetailClose: document.getElementById("card-detail-close"),
   overviewTitle: document.getElementById("overview-title"),
   overviewDescription: document.getElementById("overview-description"),
   categoryTitle: document.getElementById("category-title"),
@@ -2766,6 +2771,9 @@ const state = {
   activeServiceModalEntry: null,
   activeServiceModalTrigger: null,
   editingServiceId: null,
+  cardTemplateCache: new Map(),
+  activeCardDetailTemplate: null,
+  activeCardDetailTrigger: null,
   roleCredentials: cloneRoleCredentials(),
   assistant: {
     greeted: false,
@@ -11074,6 +11082,111 @@ function handleDocumentClick(event) {
   }
 }
 
+function resetCardDetailContent() {
+  if (!elements.cardDetailContent) return;
+  elements.cardDetailContent.innerHTML =
+    '<p class="card-detail-loading">Selecione um card para ver os detalhes.</p>';
+}
+
+function closeCardDetail() {
+  if (!elements.cardDetailOverlay || elements.cardDetailOverlay.hidden) {
+    return;
+  }
+
+  elements.cardDetailOverlay.hidden = true;
+  elements.cardDetailOverlay.setAttribute("aria-hidden", "true");
+  document.body.classList.remove("card-detail-open");
+  resetCardDetailContent();
+
+  const trigger = state.activeCardDetailTrigger;
+  state.activeCardDetailTemplate = null;
+  state.activeCardDetailTrigger = null;
+
+  if (trigger && typeof trigger.focus === "function") {
+    trigger.focus();
+  }
+}
+
+async function loadCardTemplate(templatePath) {
+  if (!templatePath) {
+    throw new Error("Template path is required");
+  }
+
+  const cache = state.cardTemplateCache;
+  if (cache.has(templatePath)) {
+    return cache.get(templatePath);
+  }
+
+  const response = await fetch(templatePath, { cache: "no-store" });
+  if (!response.ok) {
+    throw new Error(`Failed to load template: ${templatePath}`);
+  }
+
+  const html = await response.text();
+  cache.set(templatePath, html);
+  return html;
+}
+
+function openCardDetail(card, templatePath) {
+  if (!elements.cardDetailOverlay || !elements.cardDetailContent) {
+    return;
+  }
+
+  state.activeCardDetailTemplate = templatePath;
+  state.activeCardDetailTrigger = card;
+
+  const titleElement = card.querySelector("h2");
+  const title = titleElement?.textContent?.trim();
+  if (elements.cardDetailTitle) {
+    elements.cardDetailTitle.textContent = title || "Detalhes";
+  }
+
+  elements.cardDetailOverlay.hidden = false;
+  elements.cardDetailOverlay.setAttribute("aria-hidden", "false");
+  document.body.classList.add("card-detail-open");
+
+  if (elements.cardDetailPanel) {
+    try {
+      elements.cardDetailPanel.focus({ preventScroll: true });
+    } catch (error) {
+      elements.cardDetailPanel.focus();
+    }
+  }
+
+  elements.cardDetailContent.innerHTML =
+    '<p class="card-detail-loading">Carregando conteúdo...</p>';
+
+  loadCardTemplate(templatePath)
+    .then((html) => {
+      if (state.activeCardDetailTemplate !== templatePath) {
+        return;
+      }
+      elements.cardDetailContent.innerHTML = html;
+    })
+    .catch((error) => {
+      console.error(error);
+      if (state.activeCardDetailTemplate !== templatePath) {
+        return;
+      }
+      elements.cardDetailContent.innerHTML =
+        '<p class="card-detail-error">Não foi possível carregar o conteúdo solicitado.</p>';
+    });
+}
+
+function handleCardTemplate(card) {
+  if (!card) return false;
+  const templatePath = card.dataset.template;
+  if (!templatePath) {
+    return false;
+  }
+  if (!elements.cardDetailOverlay || !elements.cardDetailContent) {
+    return false;
+  }
+
+  openCardDetail(card, templatePath);
+  return true;
+}
+
 function openCategoryView(categoryId) {
   if (!categoryId) return;
   if (!isCategoryAllowed(categoryId)) {
@@ -11093,6 +11206,20 @@ function setupEventListeners() {
 
   if (elements.serviceSummaryGrid) {
     elements.serviceSummaryGrid.addEventListener("click", handleServiceSummaryClick);
+  }
+
+  if (elements.cardDetailClose) {
+    elements.cardDetailClose.addEventListener("click", () => {
+      closeCardDetail();
+    });
+  }
+
+  if (elements.cardDetailOverlay) {
+    elements.cardDetailOverlay.addEventListener("click", (event) => {
+      if (event.target === elements.cardDetailOverlay) {
+        closeCardDetail();
+      }
+    });
   }
 
   if (elements.serviceManagerFilter) {
@@ -11206,6 +11333,7 @@ function setupEventListeners() {
       closeParentChoice();
       closePasswordModal();
       closeProfileModal();
+      closeCardDetail();
     }
   });
   document.addEventListener("click", handleDocumentClick);
@@ -11230,12 +11358,18 @@ function setupEventListeners() {
     if (!categoryId) return;
     card.addEventListener("click", (event) => {
       event.preventDefault();
-      openCategoryView(categoryId);
+      const handled = handleCardTemplate(card);
+      if (!handled) {
+        openCategoryView(categoryId);
+      }
     });
     card.addEventListener("keydown", (event) => {
       if (event.key === "Enter" || event.key === " ") {
         event.preventDefault();
-        openCategoryView(categoryId);
+        const handled = handleCardTemplate(card);
+        if (!handled) {
+          openCategoryView(categoryId);
+        }
       }
     });
   });

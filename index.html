@@ -113,49 +113,91 @@
 
     <main>
       <section class="cards" aria-live="polite">
-        <article class="card" data-category="total" role="button" tabindex="0">
+        <article
+          class="card"
+          data-category="total"
+          data-template="cards/total.html"
+          role="button"
+          tabindex="0"
+        >
           <div class="card-header">
             <h2>Total de Irmãos</h2>
             <span class="value" id="total-count">0</span>
           </div>
           <p class="card-hint">Clique para acessar as informações correspondentes.</p>
         </article>
-        <article class="card" data-category="children" role="button" tabindex="0">
+        <article
+          class="card"
+          data-category="children"
+          data-template="cards/children.html"
+          role="button"
+          tabindex="0"
+        >
           <div class="card-header">
             <h2>Crianças (0-10)</h2>
             <span class="value" id="children-count">0</span>
           </div>
           <p class="card-hint">Clique para acessar as informações correspondentes.</p>
         </article>
-        <article class="card" data-category="teens" role="button" tabindex="0">
+        <article
+          class="card"
+          data-category="teens"
+          data-template="cards/teens.html"
+          role="button"
+          tabindex="0"
+        >
           <div class="card-header">
             <h2>Adolescentes (11-17)</h2>
             <span class="value" id="teens-count">0</span>
           </div>
           <p class="card-hint">Clique para acessar as informações correspondentes.</p>
         </article>
-        <article class="card" data-category="captains" role="button" tabindex="0">
+        <article
+          class="card"
+          data-category="captains"
+          data-template="cards/captains.html"
+          role="button"
+          tabindex="0"
+        >
           <div class="card-header">
             <h2>Capitães de Tropa (18-29)</h2>
             <span class="value" id="captains-count">0</span>
           </div>
           <p class="card-hint">Clique para acessar as informações correspondentes.</p>
         </article>
-        <article class="card" data-category="braves" role="button" tabindex="0">
+        <article
+          class="card"
+          data-category="braves"
+          data-template="cards/braves.html"
+          role="button"
+          tabindex="0"
+        >
           <div class="card-header">
             <h2>Valentes de Davi (30-49)</h2>
             <span class="value" id="braves-count">0</span>
           </div>
           <p class="card-hint">Clique para acessar as informações correspondentes.</p>
         </article>
-        <article class="card" data-category="stewards" role="button" tabindex="0">
+        <article
+          class="card"
+          data-category="stewards"
+          data-template="cards/stewards.html"
+          role="button"
+          tabindex="0"
+        >
           <div class="card-header">
             <h2>Intendentes (50+)</h2>
             <span class="value" id="stewards-count">0</span>
           </div>
           <p class="card-hint">Clique para acessar as informações correspondentes.</p>
         </article>
-        <article class="card" data-category="parents" role="button" tabindex="0">
+        <article
+          class="card"
+          data-category="parents"
+          data-template="cards/parents.html"
+          role="button"
+          tabindex="0"
+        >
           <div class="card-header">
             <h2>Pais</h2>
             <span class="value" id="parents-count">0</span>
@@ -165,6 +207,7 @@
         <article
           class="card card--care-network"
           data-category="care-network"
+          data-template="cards/care-network.html"
           role="button"
           tabindex="0"
         >
@@ -181,7 +224,13 @@
           </div>
           <p class="card-hint">Clique para acessar as informações correspondentes.</p>
         </article>
-        <article class="card card--services" data-category="services" role="button" tabindex="0">
+        <article
+          class="card card--services"
+          data-category="services"
+          data-template="cards/services.html"
+          role="button"
+          tabindex="0"
+        >
           <div class="card-header">
             <h2>Serviços</h2>
             <span class="value" id="services-count" aria-hidden="true">0</span>
@@ -223,6 +272,32 @@
 
       <section id="status" class="status"></section>
     </main>
+
+    <div
+      class="card-detail-overlay"
+      id="card-detail-overlay"
+      role="dialog"
+      aria-modal="true"
+      aria-hidden="true"
+      hidden
+    >
+      <section class="card-detail-panel" id="card-detail-panel" tabindex="-1">
+        <header class="card-detail-header">
+          <h2 class="card-detail-title" id="card-detail-title">Detalhes</h2>
+          <button
+            type="button"
+            class="card-detail-close"
+            id="card-detail-close"
+            aria-label="Fechar"
+          >
+            ×
+          </button>
+        </header>
+        <div class="card-detail-body" id="card-detail-content">
+          <p class="card-detail-loading">Selecione um card para ver os detalhes.</p>
+        </div>
+      </section>
+    </div>
 
     <div
       class="parent-choice"
