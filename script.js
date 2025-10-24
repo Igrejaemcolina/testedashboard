@@ -40,6 +40,82 @@ const PARENT_SHEET_HEADERS = {
   childPhone: "Telefone do Adolescente",
 };
 
+const PARENT_SHEET_ALIASES = {
+  childName: [
+    PARENT_SHEET_HEADERS.childName,
+    "Nome do Adolescente?",
+    "Nome do Adolescente",
+    "Nome do adolescente(a)",
+    "Nome do Adolescente(a):",
+    "Nome do adolescente",
+  ],
+  childBirthday: [
+    PARENT_SHEET_HEADERS.childBirthday,
+    "Data de aniversário do Adolescente",
+    "Data de aniversário do adolescente",
+    "Data de aniversário do adolescente:",
+    "Data de nascimento do Adolescente",
+  ],
+  childPhone: [
+    PARENT_SHEET_HEADERS.childPhone,
+    "Telefone do Adolescente",
+    "Telefone do adolescente",
+    "Telefone do adolescente:",
+    "Telefone do Filho(a)",
+  ],
+  fatherName: [
+    PARENT_SHEET_HEADERS.fatherName,
+    "Nome do Pai?",
+    "Nome do Pai:",
+    "Nome do pai",
+  ],
+  fatherBirthday: [
+    PARENT_SHEET_HEADERS.fatherBirthday,
+    "Data de aniversário do Pai",
+    "Data de aniversário do pai",
+    "Aniversário do Pai",
+  ],
+  fatherPhone: [
+    PARENT_SHEET_HEADERS.fatherPhone,
+    "Telefone do Pai",
+    "Telefone do pai",
+    "Telefone do Pai:",
+  ],
+  motherName: [
+    PARENT_SHEET_HEADERS.motherName,
+    "Nome da Mãe?",
+    "Nome da Mãe:",
+    "Nome da mae",
+  ],
+  motherBirthday: [
+    PARENT_SHEET_HEADERS.motherBirthday,
+    "Data de aniversário da Mãe",
+    "Data de aniversário da mãe",
+    "Aniversário da Mãe",
+  ],
+  motherPhone: [
+    PARENT_SHEET_HEADERS.motherPhone,
+    "Telefone da Mãe",
+    "Telefone da mãe",
+    "Telefone da Mãe:",
+  ],
+  siblingStatus: [
+    PARENT_SHEET_HEADERS.siblingStatus,
+    "Possui Irmão(s)",
+    "Possui irmão(s)?",
+  ],
+  siblingParticipation: [
+    PARENT_SHEET_HEADERS.siblingParticipation,
+    "Irmão participa na Casa",
+    "Irmão participa na casa?",
+  ],
+  siblingsList: [
+    PARENT_SHEET_HEADERS.siblingsList,
+    "Irmãos (nome - data)",
+    "Irmãos",
+  ],
+};
+
 let SHEET_ID = "";
 let SUPPLEMENTAL_SHEET_ID = "";
 let SERVICE_GVIZ_URL = "";
@@ -7807,6 +7883,70 @@ function buildEnrichedRecords(records) {
   });
 }
 
+function buildParentRecordLookup(record) {
+  const map = new Map();
+  if (!record || typeof record !== "object") {
+    return map;
+  }
+
+  const pushEntry = (key, value) => {
+    if (value == null) {
+      return;
+    }
+    const normalizedKey = normalizeColumnLabel(key);
+    if (!normalizedKey) {
+      return;
+    }
+    const stringValue =
+      typeof value === "string" ? value.trim() : String(value).trim();
+    if (!stringValue) {
+      return;
+    }
+    if (!map.has(normalizedKey)) {
+      map.set(normalizedKey, { key, value: stringValue });
+    }
+  };
+
+  Object.entries(record).forEach(([key, value]) => {
+    if (key === "__raw") {
+      return;
+    }
+    pushEntry(key, value);
+  });
+
+  const raw = record.__raw;
+  if (raw && typeof raw === "object") {
+    Object.entries(raw).forEach(([key, value]) => {
+      pushEntry(key, value);
+    });
+  }
+
+  return map;
+}
+
+function getParentFieldFromLookup(lookup, fieldKey) {
+  if (!(lookup instanceof Map)) {
+    return { value: "", key: "" };
+  }
+
+  const aliases = PARENT_SHEET_ALIASES[fieldKey];
+  if (!Array.isArray(aliases)) {
+    return { value: "", key: "" };
+  }
+
+  for (const alias of aliases) {
+    const normalized = normalizeColumnLabel(alias);
+    if (!normalized) {
+      continue;
+    }
+    if (lookup.has(normalized)) {
+      return lookup.get(normalized);
+    }
+  }
+
+  return { value: "", key: aliases[0] ?? "" };
+}
+
 function filterParentDetails(detailList, role) {
   if (!Array.isArray(detailList)) {
     return [];
@@ -7900,79 +8040,75 @@ function buildParentEntries(parentRecords) {
         return null;
       }
 
-      const childName = String(
-        record[PARENT_SHEET_HEADERS.childName] ?? ""
-      ).trim();
-      const rawBirthday =
-        record.__raw?.[PARENT_SHEET_HEADERS.childBirthday] ??
-        record[PARENT_SHEET_HEADERS.childBirthday] ??
-        "";
-      const childBirthday = String(rawBirthday ?? "").trim();
-      const birthDate = parseDate(rawBirthday);
+      const lookup = buildParentRecordLookup(record);
+
+      const childNameEntry = getParentFieldFromLookup(lookup, "childName");
+      const childName = String(childNameEntry.value ?? "").trim();
+
+      const childBirthdayEntry = getParentFieldFromLookup(
+        lookup,
+        "childBirthday"
+      );
+      const childBirthday = String(childBirthdayEntry.value ?? "").trim();
+      const birthDate = parseDate(childBirthdayEntry.value ?? "");
       const childAge =
         birthDate instanceof Date && !Number.isNaN(birthDate.getTime())
           ? calculateAge(birthDate)
           : null;
-      const childPhone = String(
-        record[PARENT_SHEET_HEADERS.childPhone] ?? ""
-      ).trim();
+
+      const childPhoneEntry = getParentFieldFromLookup(lookup, "childPhone");
+      const childPhone = String(childPhoneEntry.value ?? "").trim();
 
       const fatherDetails = [];
-      const fatherNameValue = String(
-        record[PARENT_SHEET_HEADERS.fatherName] ?? ""
-      ).trim();
-      if (fatherNameValue) {
+      const fatherNameEntry = getParentFieldFromLookup(lookup, "fatherName");
+      if (fatherNameEntry.value) {
         fatherDetails.push({
-          key: PARENT_SHEET_HEADERS.fatherName,
-          value: fatherNameValue,
+          key: fatherNameEntry.key,
+          value: fatherNameEntry.value,
         });
       }
-      const fatherBirthdayValue = String(
-        record[PARENT_SHEET_HEADERS.fatherBirthday] ?? ""
-      ).trim();
-      if (fatherBirthdayValue) {
+      const fatherBirthdayEntry = getParentFieldFromLookup(
+        lookup,
+        "fatherBirthday"
+      );
+      if (fatherBirthdayEntry.value) {
         fatherDetails.push({
-          key: PARENT_SHEET_HEADERS.fatherBirthday,
-          value: fatherBirthdayValue,
+          key: fatherBirthdayEntry.key,
+          value: fatherBirthdayEntry.value,
         });
       }
-      const fatherPhoneValue = String(
-        record[PARENT_SHEET_HEADERS.fatherPhone] ?? ""
-      ).trim();
-      if (fatherPhoneValue) {
+      const fatherPhoneEntry = getParentFieldFromLookup(lookup, "fatherPhone");
+      if (fatherPhoneEntry.value) {
         fatherDetails.push({
-          key: PARENT_SHEET_HEADERS.fatherPhone,
-          value: fatherPhoneValue,
+          key: fatherPhoneEntry.key,
+          value: fatherPhoneEntry.value,
         });
       }
       const father = createParentProfile(fatherDetails, "father");
 
       const motherDetails = [];
-      const motherNameValue = String(
-        record[PARENT_SHEET_HEADERS.motherName] ?? ""
-      ).trim();
-      if (motherNameValue) {
+      const motherNameEntry = getParentFieldFromLookup(lookup, "motherName");
+      if (motherNameEntry.value) {
         motherDetails.push({
-          key: PARENT_SHEET_HEADERS.motherName,
-          value: motherNameValue,
+          key: motherNameEntry.key,
+          value: motherNameEntry.value,
         });
       }
-      const motherBirthdayValue = String(
-        record[PARENT_SHEET_HEADERS.motherBirthday] ?? ""
-      ).trim();
-      if (motherBirthdayValue) {
+      const motherBirthdayEntry = getParentFieldFromLookup(
+        lookup,
+        "motherBirthday"
+      );
+      if (motherBirthdayEntry.value) {
         motherDetails.push({
-          key: PARENT_SHEET_HEADERS.motherBirthday,
-          value: motherBirthdayValue,
+          key: motherBirthdayEntry.key,
+          value: motherBirthdayEntry.value,
         });
       }
-      const motherPhoneValue = String(
-        record[PARENT_SHEET_HEADERS.motherPhone] ?? ""
-      ).trim();
-      if (motherPhoneValue) {
+      const motherPhoneEntry = getParentFieldFromLookup(lookup, "motherPhone");
+      if (motherPhoneEntry.value) {
         motherDetails.push({
-          key: PARENT_SHEET_HEADERS.motherPhone,
-          value: motherPhoneValue,
+          key: motherPhoneEntry.key,
+          value: motherPhoneEntry.value,
         });
       }
       const mother = createParentProfile(motherDetails, "mother");
@@ -7981,24 +8117,29 @@ function buildParentEntries(parentRecords) {
         return null;
       }
 
-      const siblingStatus = String(
-        record[PARENT_SHEET_HEADERS.siblingStatus] ?? ""
-      ).trim();
-      const siblingParticipation = String(
-        record[PARENT_SHEET_HEADERS.siblingParticipation] ?? ""
-      ).trim();
-      const siblingsList = String(
-        record[PARENT_SHEET_HEADERS.siblingsList] ?? ""
-      ).trim();
+      const siblingStatusEntry = getParentFieldFromLookup(
+        lookup,
+        "siblingStatus"
+      );
+      const siblingParticipationEntry = getParentFieldFromLookup(
+        lookup,
+        "siblingParticipation"
+      );
+      const siblingsListEntry = getParentFieldFromLookup(
+        lookup,
+        "siblingsList"
+      );
 
       return {
         childName,
         childAge,
         childPhone,
         childBirthday,
-        siblingStatus,
-        siblingParticipation,
-        siblingsList,
+        siblingStatus: String(siblingStatusEntry.value ?? "").trim(),
+        siblingParticipation: String(
+          siblingParticipationEntry.value ?? ""
+        ).trim(),
+        siblingsList: String(siblingsListEntry.value ?? "").trim(),
         father,
         mother,
       };
@@ -9183,23 +9324,25 @@ function renderParentCards(entries, category) {
     card.className = "parent-card";
     card.tabIndex = 0;
 
-    const fatherName = item.father?.name?.trim() || translate("parents.labels.unknown");
-    const motherName = item.mother?.name?.trim() || translate("parents.labels.unknown");
+    const fatherName =
+      item.father?.name?.trim() || translate("parents.labels.unknown");
+    const motherName =
+      item.mother?.name?.trim() || translate("parents.labels.unknown");
     const childName = item.childName?.trim() || translate("modal.noName");
 
-    const fatherLine = document.createElement("strong");
-    fatherLine.className = "parent-line parent-line-father";
-    fatherLine.textContent = translate("parents.card.father", { name: fatherName });
-
-    const motherLine = document.createElement("strong");
-    motherLine.className = "parent-line parent-line-mother";
-    motherLine.textContent = translate("parents.card.mother", { name: motherName });
-
-    const childLine = document.createElement("span");
+    const childLine = document.createElement("strong");
     childLine.className = "parent-line parent-line-child";
     childLine.textContent = translate("parents.card.child", { name: childName });
 
-    card.append(fatherLine, motherLine, childLine);
+    const motherLine = document.createElement("span");
+    motherLine.className = "parent-line parent-line-mother";
+    motherLine.textContent = translate("parents.card.mother", { name: motherName });
+
+    const fatherLine = document.createElement("span");
+    fatherLine.className = "parent-line parent-line-father";
+    fatherLine.textContent = translate("parents.card.father", { name: fatherName });
+
+    card.append(childLine, motherLine, fatherLine);
 
     card.addEventListener("click", () => {
       handleParentCardSelection(item);
