@@ -10817,32 +10817,51 @@ function mergeRecordDetails(primaryRecord, supplementalRecord, entry) {
   const careLabel = translate("careNetwork.detailLabel");
   if (careLabel) {
     const careEntry = entry?.careNetwork ?? null;
-    let careValue = translate("careNetwork.detailValueNone");
-    if (careEntry) {
-      if (Array.isArray(careEntry.services) && careEntry.services.length) {
+    const hasServices = Array.isArray(careEntry?.services)
+      ? careEntry.services.length > 0
+      : false;
+    const serviceText =
+      typeof careEntry?.serviceText === "string"
+        ? careEntry.serviceText.trim()
+        : "";
+    const hasFields = Array.isArray(careEntry?.fields)
+      ? careEntry.fields.some(({ value }) => {
+          if (value == null) {
+            return false;
+          }
+          const text = String(value).trim();
+          return text.length > 0;
+        })
+      : false;
+    const hasCareData = hasServices || serviceText || hasFields;
+
+    if (careEntry && hasCareData) {
+      let careValue = translate("careNetwork.detailValueNone");
+      if (hasServices) {
         careValue = careEntry.services.join(", ");
-      } else if (careEntry.serviceText) {
-        const trimmed = String(careEntry.serviceText).trim();
-        if (trimmed) {
-          careValue = trimmed;
-        }
+      } else if (serviceText) {
+        careValue = serviceText;
       }
-    }
 
-    merged.splice(1, 0, {
-      key: careLabel,
-      value: careValue,
-      normalizedKey: "__care_network_detail__",
-    });
-
-    if (careEntry && Array.isArray(careEntry.fields)) {
-      careEntry.fields.forEach(({ key, value }) => {
-        if (!value) {
-          return;
-        }
-        const label = translate("careNetwork.fieldLabel", { field: key });
-        addValue(label, value);
+      merged.splice(1, 0, {
+        key: careLabel,
+        value: careValue,
+        normalizedKey: "__care_network_detail__",
       });
+
+      if (Array.isArray(careEntry.fields)) {
+        careEntry.fields.forEach(({ key, value }) => {
+          if (value == null) {
+            return;
+          }
+          const text = String(value).trim();
+          if (!text) {
+            return;
+          }
+          const label = translate("careNetwork.fieldLabel", { field: key });
+          addValue(label, text);
+        });
+      }
     }
   }
 
