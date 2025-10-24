@@ -9629,6 +9629,10 @@ function renderCareNetworkCategory(category) {
 
   hideServiceSummary();
 
+  if (elements.categoryChartContainer) {
+    elements.categoryChartContainer.style.display = "none";
+  }
+
   if (state.charts.category) {
     state.charts.category.destroy();
     state.charts.category = null;
