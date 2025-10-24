@@ -8041,6 +8041,7 @@ function buildParentEntries(parentRecords) {
       }
 
       const lookup = buildParentRecordLookup(record);
+      const detailList = Array.from(lookup.values());
 
       const childNameEntry = getParentFieldFromLookup(lookup, "childName");
       const childName = String(childNameEntry.value ?? "").trim();
@@ -8059,58 +8060,59 @@ function buildParentEntries(parentRecords) {
       const childPhoneEntry = getParentFieldFromLookup(lookup, "childPhone");
       const childPhone = String(childPhoneEntry.value ?? "").trim();
 
+      const appendUniqueDetail = (list, entry) => {
+        if (!entry || !entry.key) {
+          return;
+        }
+
+        const normalizedKey = normalizeColumnLabel(entry.key);
+        if (!normalizedKey) {
+          return;
+        }
+
+        if (
+          list.some(
+            (item) => normalizeColumnLabel(item.key) === normalizedKey
+          )
+        ) {
+          return;
+        }
+
+        const stringValue =
+          entry.value == null ? "" : String(entry.value).trim();
+        list.push({ key: entry.key, value: stringValue });
+      };
+
       const fatherDetails = [];
       const fatherNameEntry = getParentFieldFromLookup(lookup, "fatherName");
-      if (fatherNameEntry.value) {
-        fatherDetails.push({
-          key: fatherNameEntry.key,
-          value: fatherNameEntry.value,
-        });
-      }
+      appendUniqueDetail(fatherDetails, fatherNameEntry);
       const fatherBirthdayEntry = getParentFieldFromLookup(
         lookup,
         "fatherBirthday"
       );
-      if (fatherBirthdayEntry.value) {
-        fatherDetails.push({
-          key: fatherBirthdayEntry.key,
-          value: fatherBirthdayEntry.value,
-        });
-      }
+      appendUniqueDetail(fatherDetails, fatherBirthdayEntry);
       const fatherPhoneEntry = getParentFieldFromLookup(lookup, "fatherPhone");
-      if (fatherPhoneEntry.value) {
-        fatherDetails.push({
-          key: fatherPhoneEntry.key,
-          value: fatherPhoneEntry.value,
-        });
-      }
+      appendUniqueDetail(fatherDetails, fatherPhoneEntry);
+
+      filterParentDetails(detailList, "father").forEach((detail) => {
+        appendUniqueDetail(fatherDetails, detail);
+      });
       const father = createParentProfile(fatherDetails, "father");
 
       const motherDetails = [];
       const motherNameEntry = getParentFieldFromLookup(lookup, "motherName");
-      if (motherNameEntry.value) {
-        motherDetails.push({
-          key: motherNameEntry.key,
-          value: motherNameEntry.value,
-        });
-      }
+      appendUniqueDetail(motherDetails, motherNameEntry);
       const motherBirthdayEntry = getParentFieldFromLookup(
         lookup,
         "motherBirthday"
       );
-      if (motherBirthdayEntry.value) {
-        motherDetails.push({
-          key: motherBirthdayEntry.key,
-          value: motherBirthdayEntry.value,
-        });
-      }
+      appendUniqueDetail(motherDetails, motherBirthdayEntry);
       const motherPhoneEntry = getParentFieldFromLookup(lookup, "motherPhone");
-      if (motherPhoneEntry.value) {
-        motherDetails.push({
-          key: motherPhoneEntry.key,
-          value: motherPhoneEntry.value,
-        });
-      }
+      appendUniqueDetail(motherDetails, motherPhoneEntry);
+
+      filterParentDetails(detailList, "mother").forEach((detail) => {
+        appendUniqueDetail(motherDetails, detail);
+      });
       const mother = createParentProfile(motherDetails, "mother");
 
       if (!father && !mother) {
@@ -8142,6 +8144,18 @@ function buildParentEntries(parentRecords) {
         siblingsList: String(siblingsListEntry.value ?? "").trim(),
         father,
         mother,
+        recordDetails: detailList.map(({ key, value }) => ({
+          key,
+          value,
+        })),
+        fieldEntries: {
+          childName: childNameEntry,
+          childBirthday: childBirthdayEntry,
+          childPhone: childPhoneEntry,
+          siblingStatus: siblingStatusEntry,
+          siblingParticipation: siblingParticipationEntry,
+          siblingsList: siblingsListEntry,
+        },
       };
     })
     .filter(Boolean);
@@ -9274,26 +9288,12 @@ function getAccessibleParentEntries() {
   return [];
 }
 
-async function handleParentCardSelection(entry) {
+function handleParentCardSelection(entry) {
   if (!entry) {
     return;
   }
 
-  const availableRoles = [];
-  if (entry.father) availableRoles.push("father");
-  if (entry.mother) availableRoles.push("mother");
-
-  if (!availableRoles.length) {
-    setStatus(translate("parents.noDetails"));
-    return;
-  }
-
-  const selectedRole = await openParentChoice(entry, availableRoles);
-  if (!selectedRole) {
-    return;
-  }
-
-  openParentDetail(entry, selectedRole);
+  openParentFamilyDetail(entry);
 }
 
 function renderParentCards(entries, category) {
@@ -11200,7 +11200,7 @@ function openRecord(record) {
   renderServiceControls(entry);
 }
 
-function openParentDetail(entry, role) {
+function openParentFamilyDetail(entry) {
   if (!entry) {
     return;
   }
@@ -11208,70 +11208,119 @@ function openParentDetail(entry, role) {
   state.activeDetailEntry = null;
   hideServiceControls();
 
-  const parent = role === "father" ? entry.father : entry.mother;
-  if (!parent) {
+  const usedKeys = new Set();
+  const details = [];
+  const { fieldEntries = {}, recordDetails } = entry;
+
+  const pushDetail = (key, value, { track = true } = {}) => {
+    if (!key) {
+      return;
+    }
+
+    details.push({ key, value });
+
+    if (track) {
+      const normalized = normalizeColumnLabel(key);
+      if (normalized) {
+        usedKeys.add(normalized);
+      }
+    }
+  };
+
+  const pushFieldEntry = (fieldEntry, value, options) => {
+    if (!fieldEntry || !fieldEntry.key) {
+      return;
+    }
+
+    pushDetail(fieldEntry.key, value ?? fieldEntry.value ?? "", options);
+  };
+
+  const childName = entry.childName?.trim() || translate("modal.noName");
+  if (fieldEntries.childName?.key) {
+    pushFieldEntry(fieldEntries.childName, childName);
+  } else {
+    pushDetail(translate("parents.details.childLabel"), childName, {
+      track: false,
+    });
+  }
+
+  if (Number.isFinite(entry.childAge)) {
+    pushDetail(translate("parents.details.ageLabel"), formatAge(entry.childAge), {
+      track: false,
+    });
+  }
+
+  if (fieldEntries.childBirthday?.key) {
+    pushFieldEntry(fieldEntries.childBirthday);
+  }
+
+  if (fieldEntries.childPhone?.key) {
+    const formattedPhone = entry.childPhone
+      ? formatPhone(entry.childPhone)
+      : fieldEntries.childPhone.value;
+    pushFieldEntry(fieldEntries.childPhone, formattedPhone);
+  }
+
+  if (fieldEntries.siblingStatus?.key) {
+    pushFieldEntry(fieldEntries.siblingStatus);
+  }
+
+  if (fieldEntries.siblingParticipation?.key) {
+    pushFieldEntry(fieldEntries.siblingParticipation);
+  }
+
+  if (fieldEntries.siblingsList?.key) {
+    pushFieldEntry(fieldEntries.siblingsList);
+  }
+
+  const appendParentDetails = (parent) => {
+    if (!parent || !Array.isArray(parent.details)) {
+      return;
+    }
+
+    parent.details.forEach(({ key, value }) => {
+      if (!key) {
+        return;
+      }
+
+      const normalized = normalizeColumnLabel(key);
+      if (normalized && usedKeys.has(normalized)) {
+        return;
+      }
+
+      let displayValue = value;
+      if (normalized && (normalized.includes("telefone") || normalized.includes("phone"))) {
+        displayValue = formatPhone(value);
+      }
+
+      pushDetail(key, displayValue);
+    });
+  };
+
+  appendParentDetails(entry.mother);
+  appendParentDetails(entry.father);
+
+  if (Array.isArray(recordDetails)) {
+    recordDetails.forEach(({ key, value }) => {
+      if (!key) {
+        return;
+      }
+
+      const normalized = normalizeColumnLabel(key);
+      if (normalized && usedKeys.has(normalized)) {
+        return;
+      }
+
+      pushDetail(key, value);
+    });
+  }
+
+  if (!details.length) {
     setStatus(translate("parents.noDetails"));
     return;
   }
 
-  const childName = entry.childName?.trim() || translate("modal.noName");
-  const details = [
-    {
-      key: translate("parents.details.childLabel"),
-      value: childName,
-    },
-    {
-      key: translate("parents.details.ageLabel"),
-      value: Number.isFinite(entry.childAge)
-        ? formatAge(entry.childAge)
-        : translate("format.ageMissing"),
-    },
-    {
-      key: translate("parents.details.phoneLabel"),
-      value: entry.childPhone
-        ? formatPhone(entry.childPhone)
-        : translate("format.phoneMissing"),
-    },
-  ];
-
-  if (entry.childBirthday) {
-    details.push({
-      key: PARENT_SHEET_HEADERS.childBirthday,
-      value: entry.childBirthday,
-    });
-  }
-  if (entry.siblingStatus) {
-    details.push({
-      key: PARENT_SHEET_HEADERS.siblingStatus,
-      value: entry.siblingStatus,
-    });
-  }
-  if (entry.siblingParticipation) {
-    details.push({
-      key: PARENT_SHEET_HEADERS.siblingParticipation,
-      value: entry.siblingParticipation,
-    });
-  }
-  if (entry.siblingsList) {
-    details.push({
-      key: PARENT_SHEET_HEADERS.siblingsList,
-      value: entry.siblingsList,
-    });
-  }
-
-  if (Array.isArray(parent.details) && parent.details.length) {
-    parent.details.forEach(({ key, value }) => {
-      details.push({ key, value });
-    });
-  } else {
-    setStatus(translate("parents.noDetails"));
-  }
-
-  const fallbackTitle = translate(`parents.modalFallback.${role}`, {
-    child: childName,
-  });
-  const title = parent.name?.trim() || fallbackTitle;
-
+  const title = childName || translate("modal.title");
   openDetailModal(title, details);
 }
 
