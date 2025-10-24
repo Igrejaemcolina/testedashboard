@@ -889,11 +889,13 @@ function hasActiveServices(entry) {
 }
 
 const CAPTAIN_ALLOWED_CATEGORIES = ["teens", "parents", "services"];
+const CARE_NETWORK_ALLOWED_CATEGORIES = ["care-network"];
 
 const pageType = document.body?.dataset.page ?? "dashboard";
 const isDashboardPage = pageType === "dashboard";
 const isCategoryPage = pageType === "category";
 const isServiceManagerPage = pageType === "service-manager";
+const isCareNetworkProfilePage = pageType === "care-network-profile";
 
 const LANGUAGE_STORAGE_KEY = "igcolina-language";
 const LANGUAGE_OPTIONS = {
@@ -1213,6 +1215,10 @@ const TRANSLATIONS = {
           label: "Serviços",
           description:
             "Perfil dedicado a gerenciar quais irmãos servem e em quais frentes atuam.",
+        },
+        careNetwork: {
+          label: "Rede de Cuidado",
+          description: "Acesso dedicado aos registros da Rede de Cuidado.",
         },
       },
     },
@@ -1760,6 +1766,10 @@ const TRANSLATIONS = {
           description:
             "Dedicated profile to manage who serves and which ministry they support.",
         },
+        careNetwork: {
+          label: "Care Network",
+          description: "Dedicated access to the Care Network records.",
+        },
       },
     },
     profile: {
@@ -2305,6 +2315,10 @@ const TRANSLATIONS = {
           description:
             "Perfil dedicado a gestionar quién sirve y en qué área lo hace.",
         },
+        careNetwork: {
+          label: "Red de Cuidado",
+          description: "Acceso dedicado a los registros de la Red de Cuidado.",
+        },
       },
     },
     profile: {
@@ -2553,6 +2567,7 @@ const ACCESS_ROLES = {
   RESPONSIBLE: "responsavel",
   CAPTAIN: "capitao",
   SERVICES: "servicos",
+  CARE_NETWORK: "careNetwork",
 };
 
 const ACCESS_METADATA = {
@@ -2567,6 +2582,10 @@ const ACCESS_METADATA = {
   [ACCESS_ROLES.SERVICES]: {
     labelKey: "access.roles.servicos.label",
     descriptionKey: "access.roles.servicos.description",
+  },
+  [ACCESS_ROLES.CARE_NETWORK]: {
+    labelKey: "access.roles.careNetwork.label",
+    descriptionKey: "access.roles.careNetwork.description",
   },
 };
 
@@ -2599,6 +2618,11 @@ const SERVICES_ROLE_CREDENTIALS = Object.freeze({
     "1a22313925ae2132",
 });
 
+const CARE_NETWORK_ROLE_CREDENTIALS = Object.freeze({
+  "7d78956f770d32b52f5f7de77a3a3f77d4dbc1764d8c028d412b44ae8908752b":
+    "1b22272a6c2d2b6171455b5128232c",
+});
+
 const BASE_ROLE_CREDENTIALS = Object.freeze({
   [ACCESS_ROLES.RESPONSIBLE]: RESPONSIBLE_ROLE_CREDENTIALS,
   [ACCESS_ROLES.SERVICES]: SERVICES_ROLE_CREDENTIALS,
@@ -2606,6 +2630,7 @@ const BASE_ROLE_CREDENTIALS = Object.freeze({
     "892cc7e526dcdacf4f31b35252576b942c802e12db33ee5ba0040d82c0860342":
       "0a26332638aa2b32125457151d352c3f2d",
   },
+  [ACCESS_ROLES.CARE_NETWORK]: CARE_NETWORK_ROLE_CREDENTIALS,
 });
 
 const ROLE_CREDENTIALS_STORAGE_KEY = "igcolina-role-credentials";
@@ -2881,6 +2906,9 @@ const CATEGORY_BY_ID = CATEGORY_CONFIG.reduce((acc, category) => {
 }, {});
 
 function getInitialCategory() {
+  if (isCareNetworkProfilePage) {
+    return "care-network";
+  }
   try {
     const params = new URLSearchParams(window.location.search);
     const requested = params.get("category");
@@ -4098,6 +4126,10 @@ function isCategoryAllowed(categoryId) {
     return CAPTAIN_ALLOWED_CATEGORIES.includes(categoryId);
   }
 
+  if (state.accessRole === ACCESS_ROLES.CARE_NETWORK) {
+    return CARE_NETWORK_ALLOWED_CATEGORIES.includes(categoryId);
+  }
+
   return false;
 }
 
@@ -4113,6 +4145,13 @@ function ensureAccessibleCategory(categoryId) {
     return CAPTAIN_ALLOWED_CATEGORIES[0];
   }
 
+  if (state.accessRole === ACCESS_ROLES.CARE_NETWORK) {
+    if (CARE_NETWORK_ALLOWED_CATEGORIES.includes(categoryId)) {
+      return categoryId;
+    }
+    return CARE_NETWORK_ALLOWED_CATEGORIES[0];
+  }
+
   return categoryId;
 }
 
@@ -4125,6 +4164,18 @@ function getAccessibleEntries() {
     return state.enrichedRecords.filter((entry) =>
       CATEGORY_BY_ID.teens.filter(entry)
     );
+  }
+
+  if (state.accessRole === ACCESS_ROLES.CARE_NETWORK) {
+    return state.enrichedRecords.filter((entry) => {
+      const care = entry?.careNetwork;
+      if (!care) {
+        return false;
+      }
+      const hasFields = Array.isArray(care.fields) && care.fields.length > 0;
+      const hasServices = Array.isArray(care.services) && care.services.length > 0;
+      return hasFields || hasServices || Boolean(care.raw);
+    });
   }
 
   return state.enrichedRecords;
@@ -4180,6 +4231,16 @@ function applyAccessRestrictions() {
 
     const allowed = isCategoryAllowed(categoryId);
     const restricted = !allowed;
+    const shouldHide =
+      state.accessRole === ACCESS_ROLES.CARE_NETWORK &&
+      !CARE_NETWORK_ALLOWED_CATEGORIES.includes(categoryId);
+
+    card.hidden = shouldHide;
+    if (shouldHide) {
+      card.setAttribute("aria-disabled", "true");
+      card.tabIndex = -1;
+      return;
+    }
 
     card.hidden = false;
     card.classList.toggle("restricted", !allowed);
@@ -4205,8 +4266,10 @@ function applyAccessRestrictions() {
     if (!categoryId) return;
     const listItem = link.closest("li");
     const hideLink =
-      state.accessRole === ACCESS_ROLES.CAPTAIN &&
-      !CAPTAIN_ALLOWED_CATEGORIES.includes(categoryId);
+      (state.accessRole === ACCESS_ROLES.CAPTAIN &&
+        !CAPTAIN_ALLOWED_CATEGORIES.includes(categoryId)) ||
+      (state.accessRole === ACCESS_ROLES.CARE_NETWORK &&
+        !CARE_NETWORK_ALLOWED_CATEGORIES.includes(categoryId));
     if (hideLink) {
       if (listItem) listItem.hidden = true;
       else link.hidden = true;
@@ -4248,6 +4311,7 @@ function applyAccessRestrictions() {
   updateUserProfileUI();
   updateBirthdays();
   redirectToServiceManagerIfNeeded();
+  redirectToCareNetworkProfileIfNeeded();
 }
 
 function redirectToServiceManagerIfNeeded() {
@@ -4262,6 +4326,31 @@ function redirectToServiceManagerIfNeeded() {
     window.location.replace("services.html");
   } catch (error) {
     window.location.assign("services.html");
+  }
+}
+
+function redirectToCareNetworkProfileIfNeeded() {
+  if (state.accessRole === ACCESS_ROLES.CARE_NETWORK) {
+    if (!isCareNetworkProfilePage) {
+      try {
+        window.location.replace("care-network-profile.html");
+      } catch (error) {
+        window.location.assign("care-network-profile.html");
+      }
+    }
+    return;
+  }
+
+  if (!state.accessRole) {
+    return;
+  }
+
+  if (isCareNetworkProfilePage) {
+    try {
+      window.location.replace("index.html");
+    } catch (error) {
+      window.location.assign("index.html");
+    }
   }
 }
 
