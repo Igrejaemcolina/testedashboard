@@ -858,12 +858,20 @@ const TRANSLATIONS = {
         description: "Veja todos os irmãos cadastrados na planilha.",
         chartLabel: "Idades de todos os irmãos",
         empty: "Nenhum irmão encontrado nesta categoria.",
+        serviceSummary: {
+          title: "Cadastros dos irmãos",
+          description: "Clique em um Irmão para obter as informações",
+        },
       },
       children: {
         title: "Crianças (0-10)",
         description: "Irmãos com idades entre 0 e 10 anos.",
         chartLabel: "Idades das crianças",
         empty: "Nenhuma criança cadastrada até o momento.",
+        serviceSummary: {
+          title: "Cadastro das crianças",
+          description: "Clique em uma Criança para obter as informações",
+        },
       },
       teens: {
         title: "Adolescentes (11-17)",
@@ -871,6 +879,10 @@ const TRANSLATIONS = {
           "Irmãos com idades entre 11 e 17 anos. Ative o filtro \"Idade apta para colportagem\" para destacar apenas 16 e 17 anos.",
         chartLabel: "Idades dos adolescentes",
         empty: "Nenhum adolescente cadastrado até o momento.",
+        serviceSummary: {
+          title: "Cadastro dos Adolescentes",
+          description: "Clique em um Adolescente para obter as informações",
+        },
       },
       parents: {
         title: "Pais",
@@ -878,12 +890,22 @@ const TRANSLATIONS = {
           "Pais e mães relacionados aos adolescentes cadastrados.",
         chartLabel: "Responsáveis pelos adolescentes",
         empty: "Nenhum pai ou mãe encontrado nesta categoria.",
+        serviceSummary: {
+          title: "Cadastro dos Pais",
+          description:
+            "Clique em um Adolescentes para obter as informações dos Pais",
+        },
       },
       careNetwork: {
         title: "Rede de Cuidado",
         description: "Cadastrados da Rede de Cuidado",
         chartLabel: "Registros da Rede de Cuidado",
         empty: "Nenhum registro encontrado na Rede de Cuidado.",
+        serviceSummary: {
+          title: "Cadastro dos Abordados",
+          description:
+            "Clique em uma pessoa abordada na colportagem para obter as informações",
+        },
       },
       services: {
         title: "Serviços",
@@ -897,18 +919,30 @@ const TRANSLATIONS = {
         description: "Irmãos com idades entre 18 e 29 anos.",
         chartLabel: "Idades dos capitães de tropa",
         empty: "Nenhum capitão de tropa cadastrado até o momento.",
+        serviceSummary: {
+          title: "Cadastro dos Capitães",
+          description: "Clique em um Capitão para obter as informações",
+        },
       },
       braves: {
         title: "Valentes de Davi (30-49)",
         description: "Irmãos com idades entre 30 e 49 anos.",
         chartLabel: "Idades dos valentes de Davi",
         empty: "Nenhum valente cadastrado até o momento.",
+        serviceSummary: {
+          title: "Cadastro dos Valentes",
+          description: "Clique em um Valente para obter as informações",
+        },
       },
       stewards: {
         title: "Intendentes (50+)",
         description: "Irmãos com 50 anos ou mais.",
         chartLabel: "Idades dos intendentes",
         empty: "Nenhum intendente cadastrado até o momento.",
+        serviceSummary: {
+          title: "Cadastro dos Intendentes",
+          description: "Clique em um Intendente para obter as informações",
+        },
       },
     },
     overview: {
@@ -1374,12 +1408,20 @@ const TRANSLATIONS = {
         description: "View every registered member from the spreadsheet.",
         chartLabel: "Ages of all members",
         empty: "No members found in this category.",
+        serviceSummary: {
+          title: "Available services",
+          description: "Click a ministry to filter the serving members.",
+        },
       },
       children: {
         title: "Children (0-10)",
         description: "Members aged between 0 and 10 years.",
         chartLabel: "Ages of children",
         empty: "No children registered so far.",
+        serviceSummary: {
+          title: "Available services",
+          description: "Click a ministry to filter the serving members.",
+        },
       },
       teens: {
         title: "Teens (11-17)",
@@ -1387,12 +1429,20 @@ const TRANSLATIONS = {
           "Members aged 11 to 17 years. Enable the \"Age fit for colporteur work\" filter to highlight only 16 and 17 years.",
         chartLabel: "Ages of teens",
         empty: "No teens registered so far.",
+        serviceSummary: {
+          title: "Available services",
+          description: "Click a ministry to filter the serving members.",
+        },
       },
       parents: {
         title: "Parents",
         description: "Parents linked to the registered teens.",
         chartLabel: "Guardians of the teens",
         empty: "No parents were found in this category.",
+        serviceSummary: {
+          title: "Available services",
+          description: "Click a ministry to filter the serving members.",
+        },
       },
       careNetwork: {
         title: "Care Network",
@@ -1400,6 +1450,10 @@ const TRANSLATIONS = {
           "Review the members listed in the Care Network and see the related follow-up details.",
         chartLabel: "Care Network records",
         empty: "No Care Network records were found.",
+        serviceSummary: {
+          title: "Available services",
+          description: "Click a ministry to filter the serving members.",
+        },
       },
       services: {
         title: "Services",
@@ -1412,18 +1466,30 @@ const TRANSLATIONS = {
         description: "Members aged between 18 and 29 years.",
         chartLabel: "Ages of troop captains",
         empty: "No troop captains registered so far.",
+        serviceSummary: {
+          title: "Available services",
+          description: "Click a ministry to filter the serving members.",
+        },
       },
       braves: {
         title: "David's Valiants (30-49)",
         description: "Members aged between 30 and 49 years.",
         chartLabel: "Ages of David's valiant warriors",
         empty: "No valiant warriors registered so far.",
+        serviceSummary: {
+          title: "Available services",
+          description: "Click a ministry to filter the serving members.",
+        },
       },
       stewards: {
         title: "Stewards (50+)",
         description: "Members aged 50 years or above.",
         chartLabel: "Ages of stewards",
         empty: "No stewards registered so far.",
+        serviceSummary: {
+          title: "Available services",
+          description: "Click a ministry to filter the serving members.",
+        },
       },
     },
     overview: {
@@ -1884,12 +1950,20 @@ const TRANSLATIONS = {
         description: "Vea a todos los hermanos registrados en la planilla.",
         chartLabel: "Edades de todos los hermanos",
         empty: "No se encontraron hermanos en esta categoría.",
+        serviceSummary: {
+          title: "Servicios disponibles",
+          description: "Haz clic en un servicio para filtrar a los hermanos que sirven.",
+        },
       },
       children: {
         title: "Niños (0-10)",
         description: "Hermanos con edades entre 0 y 10 años.",
         chartLabel: "Edades de los niños",
         empty: "No hay niños registrados por el momento.",
+        serviceSummary: {
+          title: "Servicios disponibles",
+          description: "Haz clic en un servicio para filtrar a los hermanos que sirven.",
+        },
       },
       teens: {
         title: "Adolescentes (11-17)",
@@ -1897,6 +1971,10 @@ const TRANSLATIONS = {
           "Hermanos con edades entre 11 y 17 años. Active el filtro \"Edad apta para colportaje\" para destacar solo 16 y 17 años.",
         chartLabel: "Edades de los adolescentes",
         empty: "No hay adolescentes registrados por el momento.",
+        serviceSummary: {
+          title: "Servicios disponibles",
+          description: "Haz clic en un servicio para filtrar a los hermanos que sirven.",
+        },
       },
       parents: {
         title: "Padres",
@@ -1904,6 +1982,10 @@ const TRANSLATIONS = {
           "Padres y madres vinculados a los adolescentes registrados.",
         chartLabel: "Responsables de los adolescentes",
         empty: "No se encontraron padres o madres en esta categoría.",
+        serviceSummary: {
+          title: "Servicios disponibles",
+          description: "Haz clic en un servicio para filtrar a los hermanos que sirven.",
+        },
       },
       careNetwork: {
         title: "Red de Cuidado",
@@ -1911,6 +1993,10 @@ const TRANSLATIONS = {
           "Consulta los hermanos registrados en la Red de Cuidado y revisa los datos de acompañamiento.",
         chartLabel: "Registros de la Red de Cuidado",
         empty: "No se encontraron registros en la Red de Cuidado.",
+        serviceSummary: {
+          title: "Servicios disponibles",
+          description: "Haz clic en un servicio para filtrar a los hermanos que sirven.",
+        },
       },
       services: {
         title: "Servicios",
@@ -1923,18 +2009,30 @@ const TRANSLATIONS = {
         description: "Hermanos con edades entre 18 y 29 años.",
         chartLabel: "Edades de los capitanes de tropa",
         empty: "No hay capitanes de tropa registrados por el momento.",
+        serviceSummary: {
+          title: "Servicios disponibles",
+          description: "Haz clic en un servicio para filtrar a los hermanos que sirven.",
+        },
       },
       braves: {
         title: "Valientes de David (30-49)",
         description: "Hermanos con edades entre 30 y 49 años.",
         chartLabel: "Edades de los valientes de David",
         empty: "No hay valientes registrados por el momento.",
+        serviceSummary: {
+          title: "Servicios disponibles",
+          description: "Haz clic en un servicio para filtrar a los hermanos que sirven.",
+        },
       },
       stewards: {
         title: "Intendentes (50+)",
         description: "Hermanos con 50 años o más.",
         chartLabel: "Edades de los intendentes",
         empty: "No hay intendentes registrados por el momento.",
+        serviceSummary: {
+          title: "Servicios disponibles",
+          description: "Haz clic en un servicio para filtrar a los hermanos que sirven.",
+        },
       },
     },
     overview: {
@@ -2601,6 +2699,9 @@ const CATEGORY_CONFIG = [
     descriptionKey: "categories.total.description",
     chartLabelKey: "categories.total.chartLabel",
     emptyMessageKey: "categories.total.empty",
+    serviceSummaryTitleKey: "categories.total.serviceSummary.title",
+    serviceSummaryDescriptionKey:
+      "categories.total.serviceSummary.description",
     filter: () => true,
   },
   {
@@ -2609,6 +2710,9 @@ const CATEGORY_CONFIG = [
     descriptionKey: "categories.children.description",
     chartLabelKey: "categories.children.chartLabel",
     emptyMessageKey: "categories.children.empty",
+    serviceSummaryTitleKey: "categories.children.serviceSummary.title",
+    serviceSummaryDescriptionKey:
+      "categories.children.serviceSummary.description",
     filter: (entry) => Number.isFinite(entry.age) && entry.age >= 0 && entry.age <= 10,
   },
   {
@@ -2617,6 +2721,9 @@ const CATEGORY_CONFIG = [
     descriptionKey: "categories.teens.description",
     chartLabelKey: "categories.teens.chartLabel",
     emptyMessageKey: "categories.teens.empty",
+    serviceSummaryTitleKey: "categories.teens.serviceSummary.title",
+    serviceSummaryDescriptionKey:
+      "categories.teens.serviceSummary.description",
     filter: (entry) => Number.isFinite(entry.age) && entry.age >= 11 && entry.age <= 17,
   },
   {
@@ -2625,6 +2732,9 @@ const CATEGORY_CONFIG = [
     descriptionKey: "categories.captains.description",
     chartLabelKey: "categories.captains.chartLabel",
     emptyMessageKey: "categories.captains.empty",
+    serviceSummaryTitleKey: "categories.captains.serviceSummary.title",
+    serviceSummaryDescriptionKey:
+      "categories.captains.serviceSummary.description",
     filter: (entry) => Number.isFinite(entry.age) && entry.age >= 18 && entry.age <= 29,
   },
   {
@@ -2633,6 +2743,9 @@ const CATEGORY_CONFIG = [
     descriptionKey: "categories.braves.description",
     chartLabelKey: "categories.braves.chartLabel",
     emptyMessageKey: "categories.braves.empty",
+    serviceSummaryTitleKey: "categories.braves.serviceSummary.title",
+    serviceSummaryDescriptionKey:
+      "categories.braves.serviceSummary.description",
     filter: (entry) => Number.isFinite(entry.age) && entry.age >= 30 && entry.age <= 49,
   },
   {
@@ -2641,6 +2754,9 @@ const CATEGORY_CONFIG = [
     descriptionKey: "categories.stewards.description",
     chartLabelKey: "categories.stewards.chartLabel",
     emptyMessageKey: "categories.stewards.empty",
+    serviceSummaryTitleKey: "categories.stewards.serviceSummary.title",
+    serviceSummaryDescriptionKey:
+      "categories.stewards.serviceSummary.description",
     filter: (entry) => Number.isFinite(entry.age) && entry.age >= 50,
   },
   {
@@ -2649,6 +2765,9 @@ const CATEGORY_CONFIG = [
     descriptionKey: "categories.parents.description",
     chartLabelKey: "categories.parents.chartLabel",
     emptyMessageKey: "categories.parents.empty",
+    serviceSummaryTitleKey: "categories.parents.serviceSummary.title",
+    serviceSummaryDescriptionKey:
+      "categories.parents.serviceSummary.description",
     filter: () => true,
     isParentCategory: true,
   },
@@ -2658,6 +2777,9 @@ const CATEGORY_CONFIG = [
     descriptionKey: "categories.careNetwork.description",
     chartLabelKey: "categories.careNetwork.chartLabel",
     emptyMessageKey: "categories.careNetwork.empty",
+    serviceSummaryTitleKey: "categories.careNetwork.serviceSummary.title",
+    serviceSummaryDescriptionKey:
+      "categories.careNetwork.serviceSummary.description",
     filter: () => true,
     isCareNetworkCategory: true,
   },
@@ -8835,14 +8957,19 @@ function renderServiceSummaryCards(summary) {
   }
 
   elements.serviceSummary.hidden = false;
+  const activeCategory =
+    CATEGORY_BY_ID?.[state.activeCategory] ?? CATEGORY_BY_ID?.total;
+  const titleKey =
+    activeCategory?.serviceSummaryTitleKey ?? "services.summaryTitle";
+  const descriptionKey =
+    activeCategory?.serviceSummaryDescriptionKey ??
+    "services.summaryDescription";
   if (elements.serviceSummaryTitle) {
-    elements.serviceSummaryTitle.textContent = translate(
-      "services.summaryTitle"
-    );
+    elements.serviceSummaryTitle.textContent = translate(titleKey);
   }
   if (elements.serviceSummaryDescription) {
     elements.serviceSummaryDescription.textContent = translate(
-      "services.summaryDescription"
+      descriptionKey
     );
   }
 
