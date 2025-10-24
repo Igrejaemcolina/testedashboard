@@ -9452,7 +9452,12 @@ function renderCareNetworkCards(entries, category) {
           "contato",
         ]);
       }
-      addDetail(phoneLabel, formatPhone(phoneValue));
+
+      const phoneDigits = extractPhoneDigits(phoneValue);
+      if (phoneDigits) {
+        const formattedPhone = formatPhoneDigits(phoneDigits);
+        addDetail(phoneLabel, formattedPhone || phoneValue);
+      }
     }
 
     const approachedLabel = translate("careNetwork.cardApproachedByLabel");
