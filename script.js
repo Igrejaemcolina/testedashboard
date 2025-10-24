@@ -8951,19 +8951,16 @@ function hideServiceSummary() {
   }
 }
 
-function renderServiceSummaryCards(summary) {
-  if (!elements.serviceSummary || !elements.serviceSummaryGrid) {
-    return;
-  }
-
-  elements.serviceSummary.hidden = false;
-  const activeCategory =
-    CATEGORY_BY_ID?.[state.activeCategory] ?? CATEGORY_BY_ID?.total;
+function getServiceSummaryTextKeys(category) {
   const titleKey =
-    activeCategory?.serviceSummaryTitleKey ?? "services.summaryTitle";
+    category?.serviceSummaryTitleKey ?? "services.summaryTitle";
   const descriptionKey =
-    activeCategory?.serviceSummaryDescriptionKey ??
-    "services.summaryDescription";
+    category?.serviceSummaryDescriptionKey ?? "services.summaryDescription";
+  return { titleKey, descriptionKey };
+}
+
+function applyServiceSummaryText(category) {
+  const { titleKey, descriptionKey } = getServiceSummaryTextKeys(category);
   if (elements.serviceSummaryTitle) {
     elements.serviceSummaryTitle.textContent = translate(titleKey);
   }
@@ -8972,6 +8969,20 @@ function renderServiceSummaryCards(summary) {
       descriptionKey
     );
   }
+}
+
+function renderServiceSummaryCards(summary, { category } = {}) {
+  if (!elements.serviceSummary || !elements.serviceSummaryGrid) {
+    return;
+  }
+
+  const targetCategory =
+    category ??
+    CATEGORY_BY_ID?.[state.activeCategory] ??
+    CATEGORY_BY_ID?.total;
+
+  elements.serviceSummary.hidden = false;
+  applyServiceSummaryText(targetCategory);
 
   const cards = [
     {
@@ -9481,7 +9492,7 @@ function renderServicesCategory(category) {
   const summary =
     state.accessibleServiceSummary ?? { total: 0, unassigned: 0, perService: {} };
   ensureActiveServiceFilterValid(summary);
-  renderServiceSummaryCards(summary);
+  renderServiceSummaryCards(summary, { category });
 
   const accessibleEntries = getAccessibleEntries();
   const servingEntries = accessibleEntries.filter((entry) =>
@@ -10178,7 +10189,7 @@ function renderServiceManager() {
 
   const summary =
     state.serviceSummary ?? { total: 0, unassigned: 0, perService: {} };
-  renderServiceSummaryCards(summary);
+  renderServiceSummaryCards(summary, { category: CATEGORY_BY_ID?.services });
 
   const filterValue = elements.serviceManagerFilter?.value ?? "all";
   const normalizedFilter = sanitizeServiceId(filterValue);
@@ -10378,6 +10389,7 @@ function renderCategory(categoryId = "total") {
   }
 
   setActiveSummaryCard(category.id);
+  applyServiceSummaryText(category);
 
   if (category.isParentCategory) {
     renderParentsCategory(category);
