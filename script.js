@@ -2482,6 +2482,7 @@ const elements = {
   overviewDescription: document.getElementById("overview-description"),
   categoryTitle: document.getElementById("category-title"),
   categoryDescription: document.getElementById("category-description"),
+  categoryTemplate: document.getElementById("category-template"),
   categoryMeta: document.getElementById("category-meta"),
   categoryCards: document.getElementById("category-cards"),
   categoryEmpty: document.getElementById("category-empty"),
@@ -2772,7 +2773,7 @@ const state = {
   activeServiceModalTrigger: null,
   editingServiceId: null,
   cardTemplateCache: new Map(),
-  activeCardDetailTemplate: null,
+  activeCategoryTemplate: null,
   activeCardDetailTrigger: null,
   roleCredentials: cloneRoleCredentials(),
   assistant: {
@@ -10266,6 +10267,8 @@ function renderCategory(categoryId = "total") {
     );
   }
 
+  updateCategoryTemplate(category.id);
+
   setActiveSummaryCard(category.id);
 
   if (category.isParentCategory) {
@@ -11082,10 +11085,27 @@ function handleDocumentClick(event) {
   }
 }
 
+function clearCategoryTemplate() {
+  if (!elements.categoryTemplate) {
+    return;
+  }
+
+  elements.categoryTemplate.innerHTML = "";
+  elements.categoryTemplate.hidden = true;
+}
+
 function resetCardDetailContent() {
-  if (!elements.cardDetailContent) return;
-  elements.cardDetailContent.innerHTML =
-    '<p class="card-detail-loading">Selecione um card para ver os detalhes.</p>';
+  clearCategoryTemplate();
+
+  if (elements.categoryCards) {
+    elements.categoryCards.innerHTML = "";
+  }
+
+  if (elements.categoryChartEmpty) {
+    elements.categoryChartEmpty.classList.remove("visible");
+  }
+
+  setActiveSummaryCard("");
 }
 
 function closeCardDetail() {
@@ -11099,7 +11119,7 @@ function closeCardDetail() {
   resetCardDetailContent();
 
   const trigger = state.activeCardDetailTrigger;
-  state.activeCardDetailTemplate = null;
+  state.activeCategoryTemplate = null;
   state.activeCardDetailTrigger = null;
 
   if (trigger && typeof trigger.focus === "function") {
@@ -11127,12 +11147,59 @@ async function loadCardTemplate(templatePath) {
   return html;
 }
 
-function openCardDetail(card, templatePath) {
+function getCategoryTemplatePath(categoryId) {
+  if (!categoryId) {
+    return "";
+  }
+
+  return `cards/${categoryId}.html`;
+}
+
+function updateCategoryTemplate(categoryId) {
+  if (!elements.categoryTemplate) {
+    state.activeCategoryTemplate = null;
+    return;
+  }
+
+  const templatePath = getCategoryTemplatePath(categoryId);
+  if (!templatePath) {
+    clearCategoryTemplate();
+    state.activeCategoryTemplate = null;
+    return;
+  }
+
+  if (state.activeCategoryTemplate === templatePath && !elements.categoryTemplate.hidden) {
+    return;
+  }
+
+  state.activeCategoryTemplate = templatePath;
+  elements.categoryTemplate.hidden = false;
+  elements.categoryTemplate.innerHTML =
+    '<p class="card-detail-loading">Carregando informações adicionais...</p>';
+
+  loadCardTemplate(templatePath)
+    .then((html) => {
+      if (state.activeCategoryTemplate !== templatePath) {
+        return;
+      }
+      elements.categoryTemplate.innerHTML = html;
+      elements.categoryTemplate.hidden = false;
+    })
+    .catch((error) => {
+      console.error(error);
+      if (state.activeCategoryTemplate !== templatePath) {
+        return;
+      }
+      clearCategoryTemplate();
+      state.activeCategoryTemplate = null;
+    });
+}
+
+function openCardDetail(card, categoryId) {
   if (!elements.cardDetailOverlay || !elements.cardDetailContent) {
     return;
   }
 
-  state.activeCardDetailTemplate = templatePath;
   state.activeCardDetailTrigger = card;
 
   const titleElement = card.querySelector("h2");
@@ -11153,37 +11220,32 @@ function openCardDetail(card, templatePath) {
     }
   }
 
-  elements.cardDetailContent.innerHTML =
-    '<p class="card-detail-loading">Carregando conteúdo...</p>';
+  if (elements.cardDetailContent) {
+    elements.cardDetailContent.scrollTop = 0;
+  }
 
-  loadCardTemplate(templatePath)
-    .then((html) => {
-      if (state.activeCardDetailTemplate !== templatePath) {
-        return;
-      }
-      elements.cardDetailContent.innerHTML = html;
-    })
-    .catch((error) => {
-      console.error(error);
-      if (state.activeCardDetailTemplate !== templatePath) {
-        return;
-      }
-      elements.cardDetailContent.innerHTML =
-        '<p class="card-detail-error">Não foi possível carregar o conteúdo solicitado.</p>';
-    });
+  if (categoryId) {
+    renderCategory(categoryId);
+  }
 }
 
 function handleCardTemplate(card) {
   if (!card) return false;
-  const templatePath = card.dataset.template;
-  if (!templatePath) {
+  const categoryId = card.dataset.category;
+  if (!categoryId) {
     return false;
   }
+
+  if (!isCategoryAllowed(categoryId)) {
+    showAccessRestrictionMessage();
+    return true;
+  }
+
   if (!elements.cardDetailOverlay || !elements.cardDetailContent) {
     return false;
   }
 
-  openCardDetail(card, templatePath);
+  openCardDetail(card, categoryId);
   return true;
 }
 

@@ -2372,6 +2372,24 @@ body[data-access-role="capitao"] .card.restricted .card-hint {
   scrollbar-color: rgba(56, 189, 248, 0.4) transparent;
 }
 
+.card-detail-category .section-header {
+  margin-top: 0;
+}
+
+.card-detail-category .service-summary {
+  margin-top: 1.25rem;
+}
+
+.category-template {
+  margin-top: 0.75rem;
+  display: grid;
+  gap: 1rem;
+}
+
+.category-template[hidden] {
+  display: none;
+}
+
 .card-detail-body::-webkit-scrollbar {
   width: 0.55rem;
 }
