@@ -6169,6 +6169,10 @@ function detectCareNetworkServiceColumns(columns, nameColumn) {
       return;
     }
 
+    if (isPhoneLikeLabel(column)) {
+      return;
+    }
+
     const normalized = normalizeString(column);
     if (!normalized) {
       return;
@@ -6196,7 +6200,19 @@ function detectCareNetworkServiceColumns(columns, nameColumn) {
       if (!column || column === nameColumn) {
         return false;
       }
-      return index > 0;
+      if (index > 0) {
+        if (isPhoneLikeLabel(column)) {
+          return false;
+        }
+
+        const normalized = normalizeString(column);
+        if (!normalized) {
+          return false;
+        }
+
+        return true;
+      }
+      return false;
     });
     if (fallback) {
       result.push(fallback);
