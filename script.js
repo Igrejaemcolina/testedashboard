@@ -2658,6 +2658,7 @@ const elements = {
   categoryMeta: document.getElementById("category-meta"),
   categoryCards: document.getElementById("category-cards"),
   categoryEmpty: document.getElementById("category-empty"),
+  categoryChartContainer: document.getElementById("category-chart-container"),
   categoryChartEmpty: document.getElementById("category-chart-empty"),
   overallEmpty: document.getElementById("overall-empty"),
   overallChart: document.getElementById("overall-age-chart"),
@@ -9704,6 +9705,10 @@ function renderParentsCategory(category) {
 
   hideServiceSummary();
 
+  if (elements.categoryChartContainer) {
+    elements.categoryChartContainer.style.display = "none";
+  }
+
   const entries = getAccessibleParentEntries();
   state.parentSummary = summarizeParentEntries(entries);
 
@@ -10638,6 +10643,10 @@ function renderCategory(categoryId = "total") {
 
   setActiveSummaryCard(category.id);
   applyServiceSummaryText(category);
+
+  if (elements.categoryChartContainer) {
+    elements.categoryChartContainer.style.display = "";
+  }
 
   if (category.isParentCategory) {
     renderParentsCategory(category);
