@@ -56,6 +56,10 @@ const CARE_NETWORK_PHONE_KEYS = [
   "telefone cadastrado",
   "telefone do cadastrado",
   "telefone do cuidado",
+  "número de telefone",
+  "número do telefone",
+  "número para contato",
+  "número do contato",
   "celular",
   "contato",
   "contato principal",
@@ -9266,6 +9270,78 @@ function resolveCareNetworkFieldValue(entry, candidateKeys) {
   return "";
 }
 
+function findCareNetworkFieldBySubstring(entry, substrings) {
+  if (!entry || !Array.isArray(substrings) || !substrings.length) {
+    return "";
+  }
+
+  const normalizedSubstrings = substrings
+    .map((value) => normalizeString(value))
+    .filter(Boolean);
+
+  if (!normalizedSubstrings.length) {
+    return "";
+  }
+
+  const map = entry.fieldMap instanceof Map ? entry.fieldMap : null;
+  if (map) {
+    for (const [key, value] of map.entries()) {
+      if (!key || value == null) {
+        continue;
+      }
+
+      const normalizedKey = typeof key === "string" ? key : normalizeString(key);
+      if (!normalizedKey) {
+        continue;
+      }
+
+      if (
+        normalizedSubstrings.some((substring) =>
+          normalizedKey.includes(substring)
+        )
+      ) {
+        if (typeof value === "string") {
+          const trimmed = value.trim();
+          if (trimmed) {
+            return trimmed;
+          }
+        } else {
+          const stringValue = String(value).trim();
+          if (stringValue) {
+            return stringValue;
+          }
+        }
+      }
+    }
+  }
+
+  if (Array.isArray(entry.fields)) {
+    for (const field of entry.fields) {
+      const key = normalizeString(field?.key);
+      const value = field?.value;
+      if (!key || value == null) {
+        continue;
+      }
+
+      if (normalizedSubstrings.some((substring) => key.includes(substring))) {
+        if (typeof value === "string") {
+          const trimmed = value.trim();
+          if (trimmed) {
+            return trimmed;
+          }
+        } else {
+          const stringValue = String(value).trim();
+          if (stringValue) {
+            return stringValue;
+          }
+        }
+      }
+    }
+  }
+
+  return "";
+}
+
 function renderCareNetworkCards(entries, category) {
   hideServiceSummary();
   const container = elements.categoryCards;
@@ -9285,6 +9361,7 @@ function renderCareNetworkCards(entries, category) {
   }
 
   elements.categoryEmpty.classList.remove("visible");
+  elements.categoryEmpty.textContent = "";
 
   const sortedEntries = [...entries].sort((a, b) =>
     collator.compare(a.name || "", b.name || "")
@@ -9348,10 +9425,17 @@ function renderCareNetworkCards(entries, category) {
 
     const phoneLabel = translate("careNetwork.cardPhoneLabel");
     if (phoneLabel) {
-      const phoneValue = resolveCareNetworkFieldValue(
+      let phoneValue = resolveCareNetworkFieldValue(
         entry,
         CARE_NETWORK_PHONE_KEYS
       );
+      if (!phoneValue) {
+        phoneValue = findCareNetworkFieldBySubstring(entry, [
+          "telefone",
+          "phone",
+          "contato",
+        ]);
+      }
       addDetail(phoneLabel, formatPhone(phoneValue));
     }
 
