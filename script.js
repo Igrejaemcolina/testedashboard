@@ -1098,7 +1098,7 @@ const TRANSLATIONS = {
       },
       detailLabel: "Rede de cuidado",
       detailValueNone: "N.Serviço",
-      servicesTitle: "Serviços atribuídos",
+      servicesTitle: "Número de telefone",
       fieldLabel: ({ field }) => `Rede de cuidado · ${field}`,
       cardPhoneLabel: "Telefone",
       cardApproachedByLabel: "Quem abordou",
