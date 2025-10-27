@@ -4858,6 +4858,12 @@ function updateAccessSelectedLabel(roleLabel = "") {
   if (elements.accessRoleLabel) {
     elements.accessRoleLabel.textContent = roleLabel;
   }
+
+  if (roleLabel) {
+    elements.accessSelectedText.hidden = false;
+  } else {
+    elements.accessSelectedText.hidden = true;
+  }
 }
 
 function showAccessModal() {
